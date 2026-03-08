@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CatalystOps — PySpark Optimizer for VS Code</title>
+  <meta name="description" content="Catch PySpark performance issues before they hit production. CatalystOps analyzes your Spark code inline, runs dry-run plans on Databricks, and surfaces real fixes — all inside VS Code." />
+  <link rel="icon" type="image/png" href="icon.png" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#F97316',       /* orange-500 */
+            'brand-dim': '#EA580C', /* orange-600 */
+            surface: '#0F1117',
+            card: '#161B27',
+            border: '#1E2535',
+            muted: '#6B7280',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    body { background-color: #0F1117; }
+
+    /* Gradient glow behind hero */
+    .hero-glow {
+      position: absolute;
+      width: 900px; height: 500px;
+      background: radial-gradient(ellipse at center, rgba(249,115,22,0.12) 0%, transparent 70%);
+      top: -80px; left: 50%; transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    /* Animated underline on nav links */
+    .nav-link { position: relative; }
+    .nav-link::after {
+      content: ''; position: absolute; bottom: -2px; left: 0;
+      width: 0; height: 1.5px; background: #F97316;
+      transition: width 0.25s ease;
+    }
+    .nav-link:hover::after { width: 100%; }
+
+    /* Code window */
+    .code-window {
+      background: #0D1117;
+      border: 1px solid #1E2535;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .code-titlebar {
+      background: #161B27;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid #1E2535;
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+
+    /* Squiggle underline on highlighted code */
+    .squiggle {
+      text-decoration: underline wavy #F97316;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 3px;
+    }
+    .squiggle-warn {
+      text-decoration: underline wavy #EAB308;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 3px;
+    }
+
+    /* Feature card hover */
+    .feature-card {
+      border: 1px solid #1E2535;
+      border-radius: 12px;
+      padding: 28px;
+      background: #161B27;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .feature-card:hover {
+      border-color: rgba(249,115,22,0.4);
+      transform: translateY(-2px);
+    }
+
+    /* Step connector */
+    .step-line { background: linear-gradient(to bottom, #F97316, transparent); }
+
+    /* Badge pill */
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(249,115,22,0.1);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: #F97316;
+    }
+
+    /* Gradient text */
+    .gradient-text {
+      background: linear-gradient(135deg, #fff 30%, #F97316 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Install button shimmer */
+    .btn-primary {
+      position: relative; overflow: hidden;
+      background: #F97316; color: #fff;
+      font-weight: 600; border-radius: 8px;
+      padding: 13px 28px; font-size: 1rem;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      background: #EA580C;
+      box-shadow: 0 0 28px rgba(249,115,22,0.35);
+    }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid #1E2535;
+      color: #D1D5DB;
+      font-weight: 500; border-radius: 8px;
+      padding: 13px 28px; font-size: 1rem;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-secondary:hover { border-color: #F97316; color: #fff; }
+
+    /* Diagnostic tooltip */
+    .diag-tooltip {
+      background: #1C2333;
+      border: 1px solid #2D3748;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.8rem;
+      color: #CBD5E0;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    .diag-tooltip .rule-id {
+      color: #F97316; font-weight: 600; font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body class="text-gray-100 font-sans antialiased">
+
+  <!-- ── Nav ──────────────────────────────────────────────────────────────── -->
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-border bg-surface/80 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-2.5">
+        <img src="icon.png" alt="CatalystOps" class="w-7 h-7" />
+        <span class="font-bold text-lg tracking-tight">CatalystOps</span>
+      </a>
+      <div class="hidden md:flex items-center gap-8 text-sm text-gray-400">
+        <a href="#features" class="nav-link hover:text-white transition-colors">Features</a>
+        <a href="#how-it-works" class="nav-link hover:text-white transition-colors">How it works</a>
+        <a href="#rules" class="nav-link hover:text-white transition-colors">Rules</a>
+        <a href="#mcp" class="nav-link hover:text-white transition-colors">MCP</a>
+      </div>
+      <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
+         target="_blank"
+         class="btn-primary text-sm px-5 py-2.5">
+        Install Free
+      </a>
+    </div>
+  </nav>
+
+  <!-- ── Hero ─────────────────────────────────────────────────────────────── -->
+  <section class="relative pt-36 pb-24 px-6 text-center overflow-hidden">
+    <div class="hero-glow"></div>
+
+    <div class="relative max-w-4xl mx-auto">
+      <div class="badge mb-6">
+        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+        VS Code Extension · v0.8.1
+      </div>
+
+      <h1 class="text-5xl md:text-6xl font-extrabold leading-tight mb-6">
+        <span class="gradient-text">Catch Spark performance</span><br />
+        issues before production
+      </h1>
+
+      <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+        CatalystOps analyzes your PySpark and Databricks code inline as you type —
+        30+ anti-pattern detectors, dry-run plan analysis on your cluster,
+        and actionable fixes. No context switching.
+      </p>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
+           target="_blank" class="btn-primary">
+          Install from VS Code Marketplace
+        </a>
+        <a href="https://github.com/lezwon/CatalystOps" target="_blank" class="btn-secondary">
+          View on GitHub
+        </a>
+      </div>
+
+      <!-- Hero code window -->
+      <div class="code-window mt-16 text-left mx-auto max-w-3xl shadow-2xl">
+        <div class="code-titlebar">
+          <div class="dot bg-red-500"></div>
+          <div class="dot bg-yellow-500"></div>
+          <div class="dot bg-green-500"></div>
+          <span class="ml-3 text-xs text-gray-500 font-mono">pipeline.py</span>
+        </div>
+        <div class="p-6 font-mono text-sm leading-relaxed overflow-x-auto">
+          <div class="text-gray-500 mb-4 text-xs">1  <span class="text-blue-400">from</span> <span class="text-green-400">pyspark.sql</span> <span class="text-blue-400">import</span> functions as F</div>
+          <div class="text-gray-500 text-xs">2</div>
+          <div class="text-gray-500 text-xs mt-1">3  events = spark.read.parquet(<span class="text-amber-400">"s3://bucket/events/"</span>)</div>
+          <div class="text-gray-500 text-xs mt-1 flex items-start gap-2">
+            <span>4  </span>
+            <span>
+              daily = events.groupBy(<span class="text-amber-400">"date"</span>).<span class="text-red-400 squiggle">count()</span>
+              <span class="ml-2 text-xs text-red-400">← count() triggers full scan</span>
+            </span>
+          </div>
+          <div class="text-gray-500 text-xs mt-1 flex items-start gap-2">
+            <span>5  </span>
+            <span>
+              hourly = events.<span class="text-yellow-400 squiggle-warn">collect()</span>
+              <span class="ml-2 text-xs text-yellow-400">← OOM risk on large datasets</span>
+            </span>
+          </div>
+          <div class="text-gray-500 text-xs mt-1">6</div>
+          <div class="text-gray-500 text-xs mt-1">7  result = daily.join(F.broadcast(small_df), <span class="text-amber-400">"date"</span>)</div>
+
+          <!-- Diagnostic tooltip -->
+          <div class="diag-tooltip mt-6 max-w-sm">
+            <div class="rule-id mb-1">CODE_COUNT_001 · Warning</div>
+            <div class="text-gray-300 font-sans text-xs leading-relaxed">
+              <strong>count() &gt; 0</strong> triggers a full Spark job just to check emptiness.
+              Use <code class="bg-surface px-1 rounded text-orange-400">df.isEmpty()</code> instead —
+              it short-circuits on the first partition.
+            </div>
+            <div class="mt-3 pt-3 border-t border-border">
+              <div class="text-gray-500 text-xs mb-1">Quick fix</div>
+              <code class="text-green-400 text-xs">if not df.isEmpty(): ...</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Stats bar ─────────────────────────────────────────────────────────── -->
+  <div class="border-y border-border py-8 px-6">
+    <div class="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+      <div>
+        <div class="text-3xl font-extrabold text-white">30+</div>
+        <div class="text-sm text-muted mt-1">Anti-pattern rules</div>
+      </div>
+      <div>
+        <div class="text-3xl font-extrabold text-white">0</div>
+        <div class="text-sm text-muted mt-1">Cluster needed for local analysis</div>
+      </div>
+      <div>
+        <div class="text-3xl font-extrabold text-white">2</div>
+        <div class="text-sm text-muted mt-1">Execution modes — cluster & serverless</div>
+      </div>
+      <div>
+        <div class="text-3xl font-extrabold text-white">Free</div>
+        <div class="text-sm text-muted mt-1">MIT licensed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Features ─────────────────────────────────────────────────────────── -->
+  <section id="features" class="py-24 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16">
+        <div class="badge mb-4">Features</div>
+        <h2 class="text-4xl font-bold">Everything in one place</h2>
+        <p class="text-gray-400 mt-4 max-w-xl mx-auto">
+          From static code analysis to live Databricks plan inspection — without leaving the editor.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- Feature 1 -->
+        <div class="feature-card">
+          <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center mb-5">
+            <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold text-white mb-2">Local Static Analysis</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            Detects 30+ PySpark and Databricks anti-patterns inline as you type.
+            No cluster required. Catches collect(), UDFs, cross joins, unsafe writes,
+            SQL injection, schema drift, and more.
+          </p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-card">
+          <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center mb-5">
+            <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold text-white mb-2">Dry-Run Plan Analysis</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            Submits a neutralized version of your script to Databricks (cluster or Serverless)
+            and returns the physical Catalyst plan — with sort-merge join detection,
+            broadcast thresholds, shuffle analysis, and cost estimation.
+          </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-card">
+          <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center mb-5">
+            <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold text-white mb-2">Explain Plan Tree &amp; DAG</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            Interactive sidebar tree of the physical plan with per-node cost scores.
+            One-click DAG webview. Context-aware quick fixes directly on plan nodes —
+            broadcast hint, repartition, persist, AQE config.
+          </p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-card">
+          <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center mb-5">
+            <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold text-white mb-2">Billing Dashboard</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            Tracks DBU and dollar spend per period directly from
+            <code class="bg-surface text-orange-400 px-1 rounded text-xs">system.billing.usage</code>
+            with a 1-hour cache. After each serverless run, optionally fetches actual DBU consumption.
+          </p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="feature-card">
+          <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center mb-5">
+            <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold text-white mb-2">Schema Validation</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            Tracks inferred schemas across DataFrames. Validates join column existence
+            and type compatibility. Detects union column-order mismatches that silently
+            corrupt data at runtime.
+          </p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="feature-card">
+          <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center mb-5">
+            <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold text-white mb-2">MCP Server</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            Exposes a Streamable HTTP MCP server auto-discovered by VS Code 1.99+.
+            Lets Claude and other AI tools analyze your PySpark code, fetch billing summaries,
+            and run dry runs through natural language.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── How it works ──────────────────────────────────────────────────────── -->
+  <section id="how-it-works" class="py-24 px-6 border-t border-border">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-16">
+        <div class="badge mb-4">How it works</div>
+        <h2 class="text-4xl font-bold">From install to insight in minutes</h2>
+      </div>
+
+      <div class="space-y-12">
+        <!-- Step 1 -->
+        <div class="flex gap-8 items-start">
+          <div class="flex-none">
+            <div class="w-12 h-12 rounded-full bg-brand/10 border border-brand/30 flex items-center justify-center text-brand font-bold text-lg">1</div>
+          </div>
+          <div class="pt-2">
+            <h3 class="text-xl font-semibold text-white mb-2">Install &amp; open a Python file</h3>
+            <p class="text-gray-400 leading-relaxed">
+              Install from the VS Code Marketplace. The moment you open a
+              <code class="bg-card border border-border text-orange-400 px-1.5 py-0.5 rounded text-sm">.py</code>
+              file, local analysis kicks in — no configuration needed.
+              30+ rules light up immediately for any PySpark anti-patterns.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="flex gap-8 items-start">
+          <div class="flex-none">
+            <div class="w-12 h-12 rounded-full bg-brand/10 border border-brand/30 flex items-center justify-center text-brand font-bold text-lg">2</div>
+          </div>
+          <div class="pt-2">
+            <h3 class="text-xl font-semibold text-white mb-2">Connect to Databricks (optional)</h3>
+            <p class="text-gray-400 leading-relaxed">
+              Add your workspace URL and personal access token via
+              <em>CatalystOps: Configure Databricks Connection</em>.
+              Pick cluster or Serverless execution mode. CatalystOps reads your
+              <code class="bg-card border border-border text-orange-400 px-1.5 py-0.5 rounded text-sm">~/.databrickscfg</code>
+              automatically if it exists.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="flex gap-8 items-start">
+          <div class="flex-none">
+            <div class="w-12 h-12 rounded-full bg-brand/10 border border-brand/30 flex items-center justify-center text-brand font-bold text-lg">3</div>
+          </div>
+          <div class="pt-2">
+            <h3 class="text-xl font-semibold text-white mb-2">Run a dry-run analysis</h3>
+            <p class="text-gray-400 leading-relaxed">
+              Press
+              <kbd class="bg-card border border-border text-gray-300 px-2 py-0.5 rounded text-sm font-mono">⌘⇧K</kbd>
+              to submit the current file. CatalystOps neutralizes side-effects,
+              executes the Catalyst planner on your cluster, and returns the physical plan
+              with cost annotations, join strategies, and actionable fixes — all in the sidebar.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Rules showcase ────────────────────────────────────────────────────── -->
+  <section id="rules" class="py-24 px-6 border-t border-border">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16">
+        <div class="badge mb-4">Detection rules</div>
+        <h2 class="text-4xl font-bold">What CatalystOps catches</h2>
+        <p class="text-gray-400 mt-4 max-w-xl mx-auto">
+          Rules span Spark actions, joins, streaming, Delta Lake, DLT pipelines, and security.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <!-- Rule groups -->
+        <div class="bg-card border border-border rounded-xl p-6">
+          <div class="text-brand font-semibold text-sm mb-4 flex items-center gap-2">
+            <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div> Critical / Data correctness
+          </div>
+          <ul class="space-y-2 text-sm text-gray-400">
+            <li class="flex items-center gap-2"><span class="text-red-400">●</span> SQL injection via f-string in spark.sql()</li>
+            <li class="flex items-center gap-2"><span class="text-red-400">●</span> Kafka auto-commit enabled</li>
+            <li class="flex items-center gap-2"><span class="text-red-400">●</span> APPLY AS DELETE WHEN wrong clause order (CDC)</li>
+            <li class="flex items-center gap-2"><span class="text-yellow-400">●</span> union() / intersect() column order mismatch</li>
+            <li class="flex items-center gap-2"><span class="text-yellow-400">●</span> Streaming inner join silently drops events</li>
+            <li class="flex items-center gap-2"><span class="text-yellow-400">●</span> FLOAT / DOUBLE for financial columns</li>
+          </ul>
+        </div>
+
+        <div class="bg-card border border-border rounded-xl p-6">
+          <div class="text-brand font-semibold text-sm mb-4 flex items-center gap-2">
+            <div class="w-1.5 h-1.5 rounded-full bg-yellow-500"></div> Performance
+          </div>
+          <ul class="space-y-2 text-sm text-gray-400">
+            <li class="flex items-center gap-2"><span class="text-yellow-400">●</span> collect() / toPandas() on large DataFrames</li>
+            <li class="flex items-center gap-2"><span class="text-yellow-400">●</span> Cross join / cartesian product</li>
+            <li class="flex items-center gap-2"><span class="text-yellow-400">●</span> Global orderBy (full shuffle)</li>
+            <li class="flex items-center gap-2"><span class="text-yellow-400">●</span> withColumn() inside a loop</li>
+            <li class="flex items-center gap-2"><span class="text-yellow-400">●</span> Window.orderBy() without partitionBy()</li>
+            <li class="flex items-center gap-2"><span class="text-yellow-400">●</span> Repeated source scan without cache</li>
+          </ul>
+        </div>
+
+        <div class="bg-card border border-border rounded-xl p-6">
+          <div class="text-brand font-semibold text-sm mb-4 flex items-center gap-2">
+            <div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div> Streaming
+          </div>
+          <ul class="space-y-2 text-sm text-gray-400">
+            <li class="flex items-center gap-2"><span class="text-blue-400">●</span> No .trigger() — continuous micro-batches</li>
+            <li class="flex items-center gap-2"><span class="text-blue-400">●</span> groupBy() without watermark (unbounded state)</li>
+            <li class="flex items-center gap-2"><span class="text-blue-400">●</span> Dynamic allocation on streaming cluster</li>
+            <li class="flex items-center gap-2"><span class="text-blue-400">●</span> Stateful streaming without RocksDB</li>
+            <li class="flex items-center gap-2"><span class="text-blue-400">●</span> Auto Loader without maxBytesPerTrigger</li>
+            <li class="flex items-center gap-2"><span class="text-blue-400">●</span> Checkpoint stored on DBFS</li>
+          </ul>
+        </div>
+
+        <div class="bg-card border border-border rounded-xl p-6">
+          <div class="text-brand font-semibold text-sm mb-4 flex items-center gap-2">
+            <div class="w-1.5 h-1.5 rounded-full bg-purple-400"></div> Delta Lake &amp; DLT
+          </div>
+          <ul class="space-y-2 text-sm text-gray-400">
+            <li class="flex items-center gap-2"><span class="text-purple-400">●</span> MERGE without Deletion Vectors</li>
+            <li class="flex items-center gap-2"><span class="text-purple-400">●</span> MERGE without Row-Level Concurrency</li>
+            <li class="flex items-center gap-2"><span class="text-purple-400">●</span> OPTIMIZE after every MERGE (latency spikes)</li>
+            <li class="flex items-center gap-2"><span class="text-purple-400">●</span> DROP TABLE + CREATE TABLE (non-atomic)</li>
+            <li class="flex items-center gap-2"><span class="text-purple-400">●</span> DLT PARTITION BY instead of Liquid Clustering</li>
+            <li class="flex items-center gap-2"><span class="text-purple-400">●</span> read_files() without schemaHints</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── MCP section ───────────────────────────────────────────────────────── -->
+  <section id="mcp" class="py-24 px-6 border-t border-border">
+    <div class="max-w-6xl mx-auto">
+      <div class="grid lg:grid-cols-2 gap-16 items-center">
+        <div>
+          <div class="badge mb-6">MCP Integration</div>
+          <h2 class="text-4xl font-bold mb-6">Talk to your Spark pipeline with Claude</h2>
+          <p class="text-gray-400 leading-relaxed mb-6">
+            CatalystOps ships a built-in MCP server auto-discovered by VS Code 1.99+.
+            Claude and other AI clients can call CatalystOps tools directly —
+            analyze code, fetch billing data, run dry-runs, and read plan results
+            through natural language.
+          </p>
+          <ul class="space-y-3 text-sm">
+            <li class="flex items-start gap-3">
+              <div class="mt-0.5 w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center flex-none">
+                <svg class="w-3 h-3 text-brand" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              </div>
+              <span class="text-gray-300"><strong class="text-white">analyze_pyspark</strong> — run local analysis on any code snippet</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="mt-0.5 w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center flex-none">
+                <svg class="w-3 h-3 text-brand" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              </div>
+              <span class="text-gray-300"><strong class="text-white">run_dry_run</strong> — trigger a Databricks dry-run from chat</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="mt-0.5 w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center flex-none">
+                <svg class="w-3 h-3 text-brand" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              </div>
+              <span class="text-gray-300"><strong class="text-white">get_billing_summary</strong> — ask about DBU spend in plain English</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="mt-0.5 w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center flex-none">
+                <svg class="w-3 h-3 text-brand" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              </div>
+              <span class="text-gray-300"><strong class="text-white">get_plan_analysis</strong> — read last dry-run plan results from Claude</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- MCP code example -->
+        <div class="code-window">
+          <div class="code-titlebar">
+            <div class="dot bg-red-500"></div>
+            <div class="dot bg-yellow-500"></div>
+            <div class="dot bg-green-500"></div>
+            <span class="ml-3 text-xs text-gray-500 font-mono">Claude chat</span>
+          </div>
+          <div class="p-6 font-mono text-sm space-y-4">
+            <div class="flex gap-3">
+              <div class="text-brand font-bold flex-none">You</div>
+              <div class="text-gray-300">What issues are in my active file?</div>
+            </div>
+            <div class="flex gap-3">
+              <div class="text-blue-400 font-bold flex-none">Claude</div>
+              <div class="text-gray-400 text-xs leading-relaxed">
+                <div class="text-gray-500 mb-2 italic">↳ calling get_active_file_issues…</div>
+                Found <span class="text-yellow-400">3 issues</span> in <span class="text-white">pipeline.py</span>:<br/><br/>
+                <span class="text-red-400">●</span> <span class="text-white">Line 12</span> — collect() pulls all data to the driver. OOM risk on large datasets.<br/>
+                <span class="text-yellow-400">●</span> <span class="text-white">Line 18</span> — Global orderBy shuffles all data to one partition.<br/>
+                <span class="text-blue-400">●</span> <span class="text-white">Line 31</span> — Streaming query has no .trigger() — continuous micro-batches.
+              </div>
+            </div>
+            <div class="flex gap-3">
+              <div class="text-brand font-bold flex-none">You</div>
+              <div class="text-gray-300">Fix the streaming issue and run a dry run</div>
+            </div>
+            <div class="flex gap-3">
+              <div class="text-blue-400 font-bold flex-none">Claude</div>
+              <div class="text-gray-400 text-xs leading-relaxed">
+                <div class="text-gray-500 mb-2 italic">↳ calling run_dry_run…</div>
+                Dry run complete. The plan shows a <span class="text-yellow-400">Sort-Merge Join</span> on line 8 — one side is small enough to broadcast.
+                Want me to add a broadcast hint?
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA ──────────────────────────────────────────────────────────────── -->
+  <section class="py-24 px-6 border-t border-border">
+    <div class="max-w-2xl mx-auto text-center">
+      <h2 class="text-4xl font-bold mb-4">Start optimizing today</h2>
+      <p class="text-gray-400 mb-10 text-lg">
+        Free, open-source, and available for any Databricks or PySpark project.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
+           target="_blank" class="btn-primary text-base">
+          Install from VS Code Marketplace
+        </a>
+        <a href="https://open-vsx.org/extension/CatalystOps/catalystops"
+           target="_blank" class="btn-secondary text-base">
+          Open VSX Registry
+        </a>
+      </div>
+      <p class="text-gray-600 text-sm mt-6">Also available on Open VSX for Cursor, Theia, and other editors.</p>
+    </div>
+  </section>
+
+  <!-- ── Footer ───────────────────────────────────────────────────────────── -->
+  <footer class="border-t border-border py-10 px-6">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-600">
+      <div class="flex items-center gap-2.5">
+        <img src="icon.png" alt="" class="w-5 h-5 opacity-60" />
+        <span>CatalystOps · MIT License</span>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank" class="hover:text-gray-300 transition-colors">VS Code Marketplace</a>
+        <a href="https://github.com/lezwon/CatalystOps" target="_blank" class="hover:text-gray-300 transition-colors">GitHub</a>
+        <a href="https://open-vsx.org/extension/CatalystOps/catalystops" target="_blank" class="hover:text-gray-300 transition-colors">Open VSX</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
