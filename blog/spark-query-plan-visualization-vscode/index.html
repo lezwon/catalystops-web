@@ -189,6 +189,304 @@
         <h3>🔀 Interactive DAG Visualization</h3>
         <p>Open the Plan DAG (<code>CatalystOps: Show Plan DAG</code>) to see your query rendered as an interactive graph in a VS Code webview panel. It makes immediately obvious when your plan has unnecessary stages, fan-outs, or redundant operations that wouldn't be visible in the tree view.</p>
 
+        <!-- ── DAG Visualization ─────────────────────────────────────────────────── -->
+<div class="viz-section">
+  <div class="viz-header">
+    <div class="viz-title">
+      <span class="viz-icon">⚡</span>
+      <span>Live Example: Query Plan DAG</span>
+    </div>
+    <div class="viz-subtitle">A typical PySpark join query — click any node to see what CatalystOps flags</div>
+  </div>
+
+  <div class="viz-wrap">
+    <!-- Code panel -->
+    <div class="code-panel">
+      <div class="code-titlebar">
+        <span class="dot dot-red"></span>
+        <span class="dot dot-yellow"></span>
+        <span class="dot dot-green"></span>
+        <span class="code-filename">analysis.py</span>
+      </div>
+      <pre class="code-body"><span class="kw">orders</span> = spark.table(<span class="str">"orders"</span>)
+<span class="kw">customers</span> = spark.table(<span class="str">"customers"</span>)
+<span class="kw">products</span> = spark.table(<span class="str">"products"</span>)
+
+<span class="cm"># Large join — no broadcast hints</span>
+<span class="kw">result</span> = (
+    orders
+    .<span class="fn">join</span>(customers, <span class="str">"customer_id"</span>)
+    .<span class="fn">join</span>(products, <span class="str">"product_id"</span>)
+    .<span class="fn">groupBy</span>(<span class="str">"region"</span>)
+    .<span class="fn">agg</span>(F.<span class="fn">sum</span>(<span class="str">"revenue"</span>))
+)</pre>
+    </div>
+
+    <!-- DAG panel -->
+    <div class="dag-panel">
+      <div class="dag-titlebar">
+        <span>CatalystOps: Plan DAG</span>
+        <span class="dag-badge">2 issues found</span>
+      </div>
+      <div class="dag-canvas" id="dagCanvas">
+        <svg id="dagSvg" width="100%" viewBox="0 0 560 420" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="glow-red" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/>
+              <feFlood flood-color="#e53e3e" flood-opacity="0.7" result="color"/>
+              <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="glow-orange" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>
+              <feFlood flood-color="#dd6b20" flood-opacity="0.5" result="color"/>
+              <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#4A5568"/>
+            </marker>
+          </defs>
+
+          <!-- Edges (curved bezier paths matching dagWebview.ts algorithm) -->
+          <!-- HashAggregate → Exchange -->
+          <path d="M280,48 C280,80 280,80 280,112" stroke="#4A5568" stroke-width="1.5" fill="none"/>
+          <!-- Exchange → SortMergeJoin -->
+          <path d="M280,156 C280,188 280,188 280,220" stroke="#4A5568" stroke-width="1.5" fill="none"/>
+          <!-- SortMergeJoin → Exchange (left) -->
+          <path d="M264,264 C200,296 160,296 160,328" stroke="#4A5568" stroke-width="1.5" fill="none"/>
+          <!-- SortMergeJoin → SortMergeJoin (right) -->
+          <path d="M296,264 C360,296 400,296 400,328" stroke="#4A5568" stroke-width="1.5" fill="none"/>
+          <!-- Exchange left → FileScan orders -->
+          <path d="M160,372 C100,396 80,396 80,412" stroke="#4A5568" stroke-width="1.5" fill="none"/>
+          <!-- Exchange left → FileScan customers -->
+          <path d="M160,372 C200,396 220,396 220,412" stroke="#4A5568" stroke-width="1.5" fill="none"/>
+          <!-- SortMergeJoin right → FileScan products -->
+          <path d="M400,372 C400,396 400,396 400,412" stroke="#4A5568" stroke-width="1.5" fill="none"/>
+
+          <!-- HashAggregate - OK (green) -->
+          <g class="dag-node" data-id="hash-agg" onclick="selectNode(this, 'HashAggregate', 'none', 'Aggregates results by region. No issues detected.', 0)">
+            <rect x="215" y="10" width="130" height="38" rx="6" fill="#38a169" opacity="0.9"/>
+            <text x="280" y="24" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="ui-monospace,monospace">HashAggregate</text>
+            <text x="280" y="38" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9" font-family="ui-monospace,monospace">sum(revenue)</text>
+          </g>
+
+          <!-- Exchange - WARNING (orange glow) -->
+          <g class="dag-node" data-id="exchange" onclick="selectNode(this, 'Exchange (Shuffle)', 'warning', 'Full shuffle across cluster detected. All data must be redistributed before aggregation. Consider repartitioning on the groupBy key earlier in the pipeline.', 30)">
+            <rect x="215" y="112" width="130" height="38" rx="6" fill="#dd6b20" filter="url(#glow-orange)" opacity="0.9"/>
+            <text x="280" y="126" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="ui-monospace,monospace">Exchange</text>
+            <text x="280" y="140" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9" font-family="ui-monospace,monospace">hashpartition · 30 pts</text>
+          </g>
+
+          <!-- SortMergeJoin - CRITICAL (red glow) -->
+          <g class="dag-node" data-id="smj1" onclick="selectNode(this, 'SortMergeJoin', 'critical', 'Sort-merge join requires sorting both inputs and shuffling across the cluster. If either side is small, use the broadcast() hint or increase spark.sql.autoBroadcastJoinThreshold.', 50)">
+            <rect x="215" y="220" width="130" height="38" rx="6" fill="#e53e3e" filter="url(#glow-red)" opacity="0.9"/>
+            <text x="280" y="234" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="ui-monospace,monospace">SortMergeJoin</text>
+            <text x="280" y="248" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9" font-family="ui-monospace,monospace">orders ⋈ customers · 50 pts</text>
+          </g>
+
+          <!-- Exchange left of join - WARNING -->
+          <g class="dag-node" data-id="exchange2" onclick="selectNode(this, 'Exchange (Shuffle)', 'warning', 'Shuffle required before sort-merge join. Both sides must be repartitioned on the join key. Adding a broadcast hint on the smaller table eliminates this shuffle entirely.', 30)">
+            <rect x="95" y="328" width="130" height="38" rx="6" fill="#dd6b20" filter="url(#glow-orange)" opacity="0.9"/>
+            <text x="160" y="342" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="ui-monospace,monospace">Exchange</text>
+            <text x="160" y="356" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9" font-family="ui-monospace,monospace">hashpartition · 30 pts</text>
+          </g>
+
+          <!-- SortMergeJoin right - CRITICAL -->
+          <g class="dag-node" data-id="smj2" onclick="selectNode(this, 'SortMergeJoin', 'critical', 'Second sort-merge join on product_id. Products table may be small enough to broadcast — try: broadcast(products).', 50)">
+            <rect x="335" y="328" width="130" height="38" rx="6" fill="#e53e3e" filter="url(#glow-red)" opacity="0.9"/>
+            <text x="400" y="342" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="ui-monospace,monospace">SortMergeJoin</text>
+            <text x="400" y="356" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9" font-family="ui-monospace,monospace">⋈ products · 50 pts</text>
+          </g>
+
+          <!-- FileScan orders - OK -->
+          <g class="dag-node" data-id="scan1" onclick="selectNode(this, 'FileScan (orders)', 'none', 'Delta table scan on orders. No issues detected.', 0)">
+            <rect x="20" y="390" width="110" height="24" rx="4" fill="#38a169" opacity="0.85"/>
+            <text x="75" y="406" text-anchor="middle" fill="white" font-size="10" font-family="ui-monospace,monospace">FileScan orders</text>
+          </g>
+
+          <!-- FileScan customers - OK -->
+          <g class="dag-node" data-id="scan2" onclick="selectNode(this, 'FileScan (customers)', 'none', 'Delta table scan on customers. No issues detected.', 0)">
+            <rect x="150" y="390" width="120" height="24" rx="4" fill="#38a169" opacity="0.85"/>
+            <text x="210" y="406" text-anchor="middle" fill="white" font-size="10" font-family="ui-monospace,monospace">FileScan customers</text>
+          </g>
+
+          <!-- FileScan products - OK -->
+          <g class="dag-node" data-id="scan3" onclick="selectNode(this, 'FileScan (products)', 'none', 'Delta table scan on products. No issues detected.', 0)">
+            <rect x="340" y="390" width="110" height="24" rx="4" fill="#38a169" opacity="0.85"/>
+            <text x="395" y="406" text-anchor="middle" fill="white" font-size="10" font-family="ui-monospace,monospace">FileScan products</text>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Tooltip panel -->
+      <div class="node-tooltip" id="nodeTooltip">
+        <div class="tooltip-placeholder">
+          <span>👆 Click any node to see CatalystOps analysis</span>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="dag-legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#e53e3e"></span>Critical</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#dd6b20"></span>Warning</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#4299e1"></span>Info</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#38a169"></span>OK</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.viz-section {
+  margin: 40px 0;
+  border: 1px solid #1E2535;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0D1117;
+}
+.viz-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #1E2535;
+  background: #161B27;
+}
+.viz-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.9rem; font-weight: 600; color: #F3F4F6;
+  margin-bottom: 4px;
+}
+.viz-icon { font-size: 1rem; }
+.viz-subtitle { font-size: 0.75rem; color: #6B7280; }
+
+.viz-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  min-height: 460px;
+}
+@media (max-width: 700px) {
+  .viz-wrap { grid-template-columns: 1fr; }
+}
+
+/* Code panel */
+.code-panel { border-right: 1px solid #1E2535; display: flex; flex-direction: column; }
+.code-titlebar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 9px 14px; background: #161B27;
+  border-bottom: 1px solid #1E2535;
+}
+.dot { width: 11px; height: 11px; border-radius: 50%; }
+.dot-red { background: #FF5F57; }
+.dot-yellow { background: #FFBD2E; }
+.dot-green { background: #28C840; }
+.code-filename { font-size: 0.75rem; color: #6B7280; margin-left: 6px; font-family: 'JetBrains Mono', monospace; }
+.code-body {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.78rem; line-height: 1.7;
+  padding: 18px 18px;
+  color: #9CA3AF;
+  flex: 1;
+  white-space: pre;
+  overflow-x: auto;
+}
+.code-body .kw { color: #79C0FF; }
+.code-body .str { color: #A5D6FF; }
+.code-body .fn { color: #D2A8FF; }
+.code-body .cm { color: #484F58; font-style: italic; }
+
+/* DAG panel */
+.dag-panel { display: flex; flex-direction: column; }
+.dag-titlebar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 14px; background: #161B27;
+  border-bottom: 1px solid #1E2535;
+  font-size: 0.75rem; color: #9CA3AF;
+  font-family: 'JetBrains Mono', monospace;
+}
+.dag-badge {
+  background: rgba(229,62,62,0.15);
+  border: 1px solid rgba(229,62,62,0.3);
+  color: #FC8181; border-radius: 999px;
+  padding: 2px 10px; font-size: 0.7rem;
+}
+.dag-canvas { flex: 1; padding: 8px; cursor: default; }
+.dag-node { cursor: pointer; }
+.dag-node rect { transition: opacity 0.15s, filter 0.15s; }
+.dag-node:hover rect { opacity: 1 !important; }
+.dag-node.selected rect { stroke: #fff; stroke-width: 2; }
+
+/* Tooltip */
+.node-tooltip {
+  border-top: 1px solid #1E2535;
+  padding: 12px 16px;
+  min-height: 72px;
+  background: #0D1117;
+  font-size: 0.8rem;
+}
+.tooltip-placeholder { color: #4A5568; font-style: italic; display: flex; align-items: center; height: 48px; }
+.tooltip-inner { display: none; }
+.tooltip-inner.visible { display: block; }
+.tooltip-name { font-weight: 700; margin-bottom: 4px; }
+.tooltip-name.critical { color: #FC8181; }
+.tooltip-name.warning { color: #F6AD55; }
+.tooltip-name.info { color: #63B3ED; }
+.tooltip-name.none { color: #68D391; }
+.tooltip-desc { color: #9CA3AF; line-height: 1.55; }
+.tooltip-fix {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(249,115,22,0.08);
+  border-left: 2px solid #F97316;
+  border-radius: 0 4px 4px 0;
+  font-size: 0.75rem; color: #9CA3AF;
+}
+.tooltip-fix strong { color: #F97316; }
+.tooltip-pts {
+  display: inline-block; margin-top: 6px;
+  background: rgba(229,62,62,0.1); border: 1px solid rgba(229,62,62,0.2);
+  border-radius: 4px; padding: 1px 8px;
+  font-size: 0.72rem; color: #FC8181;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Legend */
+.dag-legend {
+  display: flex; gap: 16px; padding: 8px 14px;
+  border-top: 1px solid #1E2535;
+  background: #161B27;
+}
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.72rem; color: #6B7280; }
+.legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+</style>
+
+<script>
+const FIXES = {
+  'SortMergeJoin': 'Quick fix: Add <code>broadcast()</code> hint on the smaller table, or increase <code>spark.sql.autoBroadcastJoinThreshold</code>.',
+  'Exchange (Shuffle)': 'Quick fix: Repartition earlier in the pipeline on the groupBy/join key to avoid redundant shuffle.',
+  'HashAggregate': null,
+  'FileScan (orders)': null,
+  'FileScan (customers)': null,
+  'FileScan (products)': null,
+};
+
+let selectedNode = null;
+
+function selectNode(el, name, severity, desc, pts) {
+  if (selectedNode) selectedNode.classList.remove('selected');
+  el.classList.add('selected');
+  selectedNode = el;
+
+  const tooltip = document.getElementById('nodeTooltip');
+  const fix = FIXES[name];
+  tooltip.innerHTML = '<div class="tooltip-inner visible">' +
+    '<div class="tooltip-name ' + severity + '">' + name + (pts > 0 ? '' : ' ✓') + '</div>' +
+    '<div class="tooltip-desc">' + desc + '</div>' +
+    (fix ? '<div class="tooltip-fix"><strong>💡 CatalystOps suggests:</strong> ' + fix + '</div>' : '') +
+    (pts > 0 ? '<span class="tooltip-pts">cost: ' + pts + ' pts</span>' : '') +
+    '</div>';
+}
+</script>
+
+
         <h3>⚡ Context-Aware Quick Fixes</h3>
         <p>CatalystOps doesn't just show you the problem — it offers <strong>one-click fixes</strong> directly on plan tree nodes. These aren't generic suggestions; they're generated from the actual plan for your specific query:</p>
 
