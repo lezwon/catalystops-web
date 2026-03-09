@@ -28,14 +28,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    body { background-color: #0F1117; }
+    html, body { background-color: #0F1117; overflow-x: hidden; }
     .nav-link { position: relative; }
     .nav-link::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 1.5px; background: #F97316; transition: width 0.25s ease; }
     .nav-link:hover::after { width: 100%; }
     .badge { display: inline-flex; align-items: center; background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.25); border-radius: 999px; padding: 4px 14px; font-size: 0.78rem; font-weight: 500; color: #F97316; }
     .gradient-text { background: linear-gradient(135deg, #fff 30%, #F97316 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .post-card { display: block; border: 1px solid #1E2535; border-radius: 10px; padding: 28px; background: #161B27; transition: border-color 0.2s, transform 0.15s; text-decoration: none; }
-    .post-card:hover { border-color: rgba(249,115,22,0.4); transform: translateY(-2px); }
+    .post-card:hover { border-color: rgba(249,115,22,0.4); box-shadow: 0 4px 24px rgba(0,0,0,0.3); }
     .btn-primary { background: #F97316; color: #fff !important; font-weight: 600; border-radius: 8px; padding: 8px 20px; font-size: 0.875rem; transition: background 0.2s, box-shadow 0.2s; display: inline-block; text-decoration: none !important; }
     .btn-primary:hover { background: #EA580C; }
     @media (max-width: 400px) { .btn-primary { font-size: 0.75rem !important; padding: 6px 12px !important; } }
@@ -43,7 +43,7 @@
 </head>
 <body class="text-gray-100 font-sans antialiased">
 
-  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-border backdrop-blur-md" style="background: rgba(15,17,23,0.9); height: 64px; position: fixed;">
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-border backdrop-blur-md" style="background: rgba(15,17,23,0.95); height: 64px; position: fixed; -webkit-transform: translateZ(0); transform: translateZ(0);">
     <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
       <div class="flex items-center gap-2.5">
         <a href="/" class="flex items-center gap-2.5">
