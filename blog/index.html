@@ -1,119 +1,115 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Blog · CatalystOps · SpendOps</title>
-  <meta name="description" content="Release notes, guides, and updates from the CatalystOps team." />
+  <meta name="description" content="Release notes, feature deep-dives, and updates from the CatalystOps team." />
   <link rel="icon" type="image/png" href="/icon.png" />
   <link rel="canonical" href="https://spendops.dev/blog/" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#F97316', 'brand-dim': '#EA580C',
+            surface: '#0F1117', card: '#161B27',
+            border: '#1E2535', muted: '#6B7280',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+          },
+        },
+      },
+    }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --bg:#0F1117; --card:#161B27; --border:#1E2535; --muted:#6B7280; --text:#9CA3AF; --heading:#F3F4F6; --brand:#F97316; --brand-dim:#EA580C; }
-    html { background: var(--bg); }
-    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
-    a { color: inherit; text-decoration: none; }
-
-    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; border-bottom: 1px solid #1E2535; background: rgba(15,17,23,0.8); backdrop-filter: blur(12px); height: 64px; display: flex; align-items: center; }
-    .nav-inner { max-width: 1152px; margin: 0 auto; padding: 0 24px; width: 100%; display: flex; align-items: center; justify-content: space-between; }
-    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .nav-brand img { width: 28px; height: 28px; }
-    .nav-brand-name { font-weight: 700; font-size: 1.125rem; letter-spacing: -0.025em; color: #F3F4F6; }
-    .nav-brand-by { font-size: 0.75rem; color: #6B7280; font-weight: 400; white-space: nowrap; }
-    .nav-brand-by a { color: #6B7280; transition: color 0.2s; }
-    .nav-brand-by a:hover { color: #fff; }
-    .nav-links { display: flex; align-items: center; gap: 32px; }
-    .nav-links a { font-size: 0.875rem; color: #9CA3AF; transition: color 0.2s; text-decoration: none; }
-    .nav-links a:hover { color: #fff; }
-    .nav-links a.active { color: #F97316; }
-    .btn-nav { background: #F97316; color: #fff !important; font-weight: 600; font-size: 0.875rem; border-radius: 8px; padding: 10px 20px; transition: background 0.2s, box-shadow 0.2s; text-decoration: none; white-space: nowrap; }
-    .btn-nav:hover { background: #EA580C; box-shadow: 0 0 20px rgba(249,115,22,0.3); }
-
-    .page { padding-top: 64px; }
-    .container { max-width: 700px; margin: 0 auto; padding: 0 24px; }
-
-    .page-header { padding: 40px 0 36px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
-    .tag { display: inline-flex; align-items: center; background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.25); border-radius: 999px; padding: 3px 11px; font-size: 0.73rem; font-weight: 500; color: var(--brand); margin-bottom: 16px; }
-    .page-title { font-size: 2rem; font-weight: 800; color: var(--heading); margin-bottom: 10px; }
-    .page-title .accent { color: var(--brand); }
-    .page-subtitle { font-size: 1rem; color: var(--muted); }
-
-    .posts { display: flex; flex-direction: column; gap: 1px; padding-bottom: 64px; }
-    .post-card { display: block; padding: 28px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); margin-bottom: 16px; transition: border-color 0.2s, transform 0.15s; }
+    body { background-color: #0F1117; }
+    .nav-link { position: relative; }
+    .nav-link::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 1.5px; background: #F97316; transition: width 0.25s ease; }
+    .nav-link:hover::after { width: 100%; }
+    .badge { display: inline-flex; align-items: center; background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.25); border-radius: 999px; padding: 4px 14px; font-size: 0.78rem; font-weight: 500; color: #F97316; }
+    .gradient-text { background: linear-gradient(135deg, #fff 30%, #F97316 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .post-card { display: block; border: 1px solid #1E2535; border-radius: 10px; padding: 28px; background: #161B27; transition: border-color 0.2s, transform 0.15s; text-decoration: none; }
     .post-card:hover { border-color: rgba(249,115,22,0.4); transform: translateY(-2px); }
-    .post-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
-    .post-date { font-size: 0.78rem; color: var(--muted); }
-    .post-version { font-size: 0.72rem; color: var(--muted); background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; font-family: monospace; }
-    .post-title { font-size: 1.15rem; font-weight: 700; color: var(--heading); margin-bottom: 10px; line-height: 1.35; }
-    .post-excerpt { font-size: 0.875rem; color: var(--text); line-height: 1.65; margin-bottom: 14px; }
-    .read-more { font-size: 0.83rem; color: var(--brand); font-weight: 500; }
-
-    footer { border-top: 1px solid var(--border); padding: 24px 0; }
-    .footer-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-    .footer-left { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--muted); }
-    .footer-left img { width: 16px; height: 16px; opacity: 0.4; }
-    .footer-right { display: flex; gap: 18px; }
-    .footer-right a { font-size: 0.78rem; color: var(--muted); transition: color 0.2s; }
-    .footer-right a:hover { color: #fff; }
-
-    @media (max-width: 600px) { .nav-links { display: none; } .page-title { font-size: 1.5rem; } }
+    .btn-primary { background: #F97316; color: #fff !important; font-weight: 600; border-radius: 8px; padding: 8px 20px; font-size: 0.875rem; transition: background 0.2s, box-shadow 0.2s; display: inline-block; text-decoration: none !important; }
+    .btn-primary:hover { background: #EA580C; }
   </style>
 </head>
-<body>
+<body class="text-gray-100 font-sans antialiased">
 
-  <nav>
-    <div class="nav-inner">
-      <a href="/" class="nav-brand">
-        <img src="/icon.png" alt="CatalystOps" />
-        <span class="nav-brand-name">CatalystOps</span>
-        <span class="nav-brand-by">by&nbsp;<a href="/">SpendOps</a></span>
-      </a>
-      <div class="nav-links">
-        <a href="/#features">Features</a>
-        <a href="/#how-it-works">How it works</a>
-        <a href="/#rules">Rules</a>
-        <a href="/#mcp">MCP</a>
-        <a href="/blog/" class="active">Blog</a>
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-border bg-surface/80 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <a href="/" class="flex items-center gap-2.5">
+          <img src="/icon.png" alt="CatalystOps" class="w-7 h-7" />
+          <span class="font-bold text-lg tracking-tight">CatalystOps</span>
+        </a>
+        <span class="text-xs text-muted font-normal whitespace-nowrap">by&nbsp;<a href="/" class="hover:text-white transition-colors text-muted">SpendOps</a></span>
       </div>
-      <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" class="btn-nav" target="_blank">Install Free</a>
+      <div class="hidden md:flex items-center gap-8 text-sm text-gray-400">
+        <a href="/#features" class="nav-link hover:text-white transition-colors">Features</a>
+        <a href="/#how-it-works" class="nav-link hover:text-white transition-colors">How it works</a>
+        <a href="/#rules" class="nav-link hover:text-white transition-colors">Rules</a>
+        <a href="/#mcp" class="nav-link hover:text-white transition-colors">MCP</a>
+        <a href="/blog/" class="nav-link text-brand">Blog</a>
+      </div>
+      <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank"
+         class="btn-primary text-sm px-5 py-2.5">Install Free</a>
     </div>
   </nav>
 
-  <div class="page">
-    <div class="container">
-      <header class="page-header">
-        <span class="tag">Blog</span>
-        <h1 class="page-title">Release Notes <span class="accent">&amp; Updates</span></h1>
-        <p class="page-subtitle">What's new in CatalystOps — features, fixes, and what's coming next.</p>
+  <div class="pt-16">
+    <div class="max-w-[700px] mx-auto px-6">
+
+      <header class="pt-12 pb-10 border-b border-border mb-10">
+        <span class="badge mb-4 inline-block">Blog</span>
+        <h1 class="text-4xl font-extrabold mb-3"><span class="gradient-text">Release Notes & Updates</span></h1>
+        <p class="text-gray-400">What's new in CatalystOps — features, fixes, and what's coming next.</p>
       </header>
 
-      <div class="posts">
-        <a href="/blog/spark-query-plan-visualization-vscode/" class="post-card">
-          <div class="post-meta">
-            <span class="tag">Release Notes</span>
-            <span class="post-date">March 9, 2026</span>
-            <span class="post-version">v0.8.0</span>
+      <div class="space-y-5 pb-24">
+
+        <a href="/blog/databricks-billing-dashboard-vscode/" class="post-card">
+          <div class="flex items-center gap-3 mb-3 flex-wrap">
+            <span class="badge">Feature Deep-Dive</span>
+            <span class="text-xs text-muted">March 9, 2026</span>
+            <span class="text-xs text-muted font-mono bg-surface border border-border rounded px-2 py-0.5">v0.6.0</span>
           </div>
-          <h2 class="post-title">See Inside Your Spark Jobs: CatalystOps 0.8.0 Brings Query Plan Visualization to VS Code</h2>
-          <p class="post-excerpt">CatalystOps 0.8.0 ships the Explain Plan view and DAG visualization: two new tools that bring your Spark physical query plan directly into VS Code, with cost scores on every node and one-click fixes for the most common performance killers.</p>
-          <span class="read-more">Read more →</span>
+          <h2 class="text-lg font-bold text-white mb-2 leading-snug">Stop Guessing Your Databricks Bill. The Billing Dashboard Is Here.</h2>
+          <p class="text-sm text-gray-400 leading-relaxed mb-3">See exactly where your Databricks spend is going — by user, workload, and job — without leaving VS Code. CatalystOps queries system.billing.usage directly and surfaces the results in your sidebar.</p>
+          <span class="text-brand text-sm font-medium">Read more →</span>
         </a>
+
+        <a href="/blog/spark-query-plan-visualization-vscode/" class="post-card">
+          <div class="flex items-center gap-3 mb-3 flex-wrap">
+            <span class="badge">Release Notes</span>
+            <span class="text-xs text-muted">March 9, 2026</span>
+            <span class="text-xs text-muted font-mono bg-surface border border-border rounded px-2 py-0.5">v0.8.0</span>
+          </div>
+          <h2 class="text-lg font-bold text-white mb-2 leading-snug">See Inside Your Spark Jobs: CatalystOps 0.8.0 Brings Query Plan Visualization to VS Code</h2>
+          <p class="text-sm text-gray-400 leading-relaxed mb-3">CatalystOps 0.8.0 ships the Explain Plan view and DAG visualization: two new tools that bring your Spark physical query plan directly into VS Code, with cost scores on every node and one-click fixes.</p>
+          <span class="text-brand text-sm font-medium">Read more →</span>
+        </a>
+
       </div>
     </div>
   </div>
 
-  <footer>
-    <div class="footer-inner">
-      <div class="footer-left">
-        <img src="/icon.png" alt="" />
+  <footer class="border-t border-border py-7">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted">
+      <div class="flex items-center gap-2">
+        <img src="/icon.png" alt="" class="w-4 h-4 opacity-40" />
         <span>© 2026 SpendOps. All rights reserved.</span>
       </div>
-      <div class="footer-right">
-        <a href="https://github.com/lezwon/CatalystOps" target="_blank">GitHub</a>
-        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank">Marketplace</a>
-        <a href="/blog/">Blog</a>
+      <div class="flex gap-6">
+        <a href="https://github.com/lezwon/CatalystOps" target="_blank" class="hover:text-white transition-colors">GitHub</a>
+        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank" class="hover:text-white transition-colors">Marketplace</a>
+        <a href="/blog/" class="hover:text-white transition-colors">Blog</a>
       </div>
     </div>
   </footer>

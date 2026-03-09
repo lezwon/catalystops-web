@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stop Guessing Your Databricks Bill: CatalystOps Billing Dashboard · SpendOps Blog</title>
+  <meta name="description" content="CatalystOps 0.6.0 ships a billing dashboard that queries system.billing.usage directly from VS Code — showing DBU and dollar spend by user, workload, and job in real time." />
+  <meta property="og:title" content="Stop Guessing Your Databricks Bill: The CatalystOps Billing Dashboard" />
+  <meta property="og:description" content="See exactly where your Databricks spend is going — by user, workload, and job — without leaving VS Code." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://spendops.dev/blog/databricks-billing-dashboard-vscode/" />
+  <link rel="icon" type="image/png" href="/icon.png" />
+  <link rel="canonical" href="https://spendops.dev/blog/databricks-billing-dashboard-vscode/" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#F97316',
+            'brand-dim': '#EA580C',
+            surface: '#0F1117',
+            card: '#161B27',
+            border: '#1E2535',
+            muted: '#6B7280',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Stop Guessing Your Databricks Bill: The CatalystOps Billing Dashboard",
+    "datePublished": "2026-03-09",
+    "author": { "@type": "Organization", "name": "SpendOps" },
+    "publisher": { "@type": "Organization", "name": "SpendOps", "url": "https://spendops.dev" },
+    "url": "https://spendops.dev/blog/databricks-billing-dashboard-vscode/"
+  }
+  </script>
+
+  <style>
+    body { background-color: #0F1117; }
+
+    .nav-link { position: relative; }
+    .nav-link::after {
+      content: ''; position: absolute; bottom: -2px; left: 0;
+      width: 0; height: 1.5px; background: #F97316;
+      transition: width 0.25s ease;
+    }
+    .nav-link:hover::after { width: 100%; }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #fff 30%, #F97316 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(249,115,22,0.1);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: #F97316;
+    }
+
+    .btn-primary {
+      background: #F97316; color: #fff !important;
+      font-weight: 600; border-radius: 8px;
+      padding: 11px 24px; font-size: 0.9rem;
+      transition: background 0.2s, box-shadow 0.2s;
+      display: inline-block; text-decoration: none !important;
+    }
+    .btn-primary:hover { background: #EA580C; box-shadow: 0 0 24px rgba(249,115,22,0.35); }
+
+    .btn-secondary {
+      background: transparent; color: #D1D5DB !important;
+      border: 1px solid #1E2535;
+      font-weight: 500; border-radius: 8px;
+      padding: 11px 24px; font-size: 0.9rem;
+      transition: border-color 0.2s, color 0.2s;
+      display: inline-block; text-decoration: none !important;
+    }
+    .btn-secondary:hover { border-color: #F97316; color: #fff !important; text-decoration: none !important; }
+
+    /* Prose styles */
+    .prose h2 {
+      font-size: 1.4rem; font-weight: 700; color: #F3F4F6;
+      margin-top: 3rem; margin-bottom: 1rem;
+      padding-bottom: 0.6rem; border-bottom: 1px solid #1E2535;
+    }
+    .prose h3 { font-size: 1.05rem; font-weight: 600; color: #F97316; margin-top: 2rem; margin-bottom: 0.75rem; }
+    .prose p { color: #9CA3AF; line-height: 1.8; margin-bottom: 1.25rem; }
+    .prose p strong { color: #F3F4F6; }
+    .prose a { color: #F97316; text-decoration: none; }
+    .prose a:hover { text-decoration: underline; }
+    .prose code {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.82em;
+      background: #161B27; border: 1px solid #1E2535;
+      border-radius: 4px; padding: 2px 6px; color: #F97316;
+    }
+    .prose ul { list-style: none; padding: 0; margin-bottom: 1.25rem; }
+    .prose ul li { color: #9CA3AF; padding: 5px 0 5px 22px; position: relative; line-height: 1.75; }
+    .prose ul li::before { content: '→'; position: absolute; left: 0; color: #F97316; }
+    .prose ol { list-style: none; padding: 0; counter-reset: ol; margin-bottom: 1.25rem; }
+    .prose ol li { counter-increment: ol; color: #9CA3AF; padding: 7px 0 7px 38px; position: relative; line-height: 1.75; }
+    .prose ol li::before {
+      content: counter(ol); position: absolute; left: 0; top: 8px;
+      width: 22px; height: 22px;
+      background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.3);
+      border-radius: 50%; font-size: 0.72rem; font-weight: 700; color: #F97316;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .prose hr { border: none; border-top: 1px solid #1E2535; margin: 2.5rem 0; }
+
+    /* Code block */
+    .code-window { background: #0D1117; border: 1px solid #1E2535; border-radius: 12px; overflow: hidden; }
+    .code-titlebar { background: #161B27; padding: 10px 16px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #1E2535; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+
+    /* Callout */
+    .callout { background: #161B27; border: 1px solid #1E2535; border-left: 3px solid #F97316; border-radius: 8px; padding: 18px 22px; margin: 24px 0; }
+    .callout-label { font-size: 0.72rem; font-weight: 600; color: #F97316; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+
+    /* Billing mockup */
+    .billing-mock { background: #0D1117; border: 1px solid #1E2535; border-radius: 12px; overflow: hidden; font-family: 'JetBrains Mono', monospace; }
+    .billing-mock-bar { background: #161B27; padding: 8px 14px; border-bottom: 1px solid #1E2535; display: flex; align-items: center; justify-content: space-between; }
+    .billing-row { display: flex; align-items: center; padding: 8px 14px; border-bottom: 1px solid #1E2535; gap: 10px; font-size: 0.78rem; }
+    .billing-row:last-child { border-bottom: none; }
+    .billing-row:hover { background: rgba(249,115,22,0.03); }
+    .billing-bar-fill { height: 6px; border-radius: 3px; background: #F97316; }
+  </style>
+</head>
+<body class="text-gray-100 font-sans antialiased">
+
+  <!-- Nav -->
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-border bg-surface/80 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <a href="/" class="flex items-center gap-2.5">
+          <img src="/icon.png" alt="CatalystOps" class="w-7 h-7" />
+          <span class="font-bold text-lg tracking-tight">CatalystOps</span>
+        </a>
+        <span class="text-xs text-muted font-normal whitespace-nowrap">by&nbsp;<a href="/" class="hover:text-white transition-colors text-muted">SpendOps</a></span>
+      </div>
+      <div class="hidden md:flex items-center gap-8 text-sm text-gray-400">
+        <a href="/#features" class="nav-link hover:text-white transition-colors">Features</a>
+        <a href="/#how-it-works" class="nav-link hover:text-white transition-colors">How it works</a>
+        <a href="/#rules" class="nav-link hover:text-white transition-colors">Rules</a>
+        <a href="/#mcp" class="nav-link hover:text-white transition-colors">MCP</a>
+        <a href="/blog/" class="nav-link text-brand">Blog</a>
+      </div>
+      <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank"
+         class="btn-primary text-sm px-5 py-2.5">Install Free</a>
+    </div>
+  </nav>
+
+  <!-- Page -->
+  <div class="pt-16">
+    <div class="max-w-[700px] mx-auto px-6">
+
+      <!-- Breadcrumb -->
+      <div class="flex items-center gap-2 text-xs text-muted pt-6">
+        <a href="/" class="hover:text-brand transition-colors">Home</a>
+        <span class="text-border">›</span>
+        <a href="/blog/" class="hover:text-brand transition-colors">Blog</a>
+        <span class="text-border">›</span>
+        <span class="text-gray-400">Billing Dashboard</span>
+      </div>
+
+      <!-- Article header -->
+      <header class="pt-5 pb-10 border-b border-border mb-12">
+        <div class="flex items-center gap-3 mb-5 flex-wrap">
+          <span class="badge">Feature Deep-Dive</span>
+          <span class="text-xs text-muted">March 9, 2026</span>
+          <span class="text-xs text-muted font-mono bg-card border border-border rounded px-2 py-0.5">v0.6.0</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold leading-tight mb-5">
+          <span class="gradient-text">Stop Guessing Your Databricks Bill.</span><br/>
+          The Billing Dashboard Is Here.
+        </h1>
+        <p class="text-lg text-gray-400 leading-relaxed">
+          Most Databricks cost surprises share one root cause: <strong class="text-gray-200">you don't find out until the invoice arrives.</strong>
+          CatalystOps 0.6.0 ships a billing dashboard that queries <code>system.billing.usage</code> directly
+          from VS Code — showing DBU and dollar spend broken down by user, workload, and job, updated on demand.
+        </p>
+      </header>
+
+      <!-- Article -->
+      <article class="prose pb-24">
+
+        <h2>The Problem With Databricks Billing Visibility</h2>
+        <p>
+          Databricks bills in DBUs — Databricks Units — which map to dollars via per-SKU pricing.
+          A single runaway job, an accidentally left-on SQL warehouse, or a pipeline running on
+          All-Purpose compute instead of Jobs compute can easily add hundreds of dollars before anyone notices.
+        </p>
+        <p>
+          The official billing UI lives in the Databricks console under Account &gt; Usage. It's fine for
+          finance teams doing monthly reviews. It's not designed for engineers who want to check their
+          spend <em>while they're writing code</em>.
+        </p>
+        <p><strong>That's the gap CatalystOps fills.</strong></p>
+
+        <h2>How It Works</h2>
+        <p>
+          CatalystOps queries the <code>system.billing.usage</code> Unity Catalog system table directly,
+          joining against <code>system.billing.list_prices</code> to convert DBUs into dollar figures.
+          The query runs through your existing SQL warehouse — no extra infrastructure, no external services.
+        </p>
+
+        <!-- SQL snippet -->
+        <div class="code-window my-6 not-prose">
+          <div class="code-titlebar">
+            <span class="dot bg-[#FF5F57]"></span>
+            <span class="dot bg-[#FFBD2E]"></span>
+            <span class="dot bg-[#28C840]"></span>
+            <span class="text-xs text-muted ml-2 font-mono">billingFetcher.ts — BILLING_SQL</span>
+          </div>
+          <pre class="text-xs font-mono leading-relaxed p-5 overflow-x-auto text-gray-300"><span class="text-blue-400">SELECT</span>
+    CAST(u.usage_date <span class="text-blue-400">AS</span> STRING)           <span class="text-blue-400">AS</span> date,
+    u.billing_origin_product              <span class="text-blue-400">AS</span> workloadType,
+    u.identity_metadata.run_as            <span class="text-blue-400">AS</span> runAs,
+    u.usage_metadata.job_id               <span class="text-blue-400">AS</span> jobId,
+    u.sku_name                            <span class="text-blue-400">AS</span> skuName,
+    <span class="text-purple-400">SUM</span>(u.usage_quantity)               <span class="text-blue-400">AS</span> dbus,
+    <span class="text-purple-400">SUM</span>(u.usage_quantity * lp.pricing.default) <span class="text-blue-400">AS</span> dollars
+<span class="text-blue-400">FROM</span> system.billing.usage u
+<span class="text-blue-400">LEFT JOIN</span> system.billing.list_prices lp
+    <span class="text-blue-400">ON</span>  u.sku_name = lp.sku_name
+    <span class="text-blue-400">AND</span> u.usage_start_time >= lp.price_start_time
+<span class="text-blue-400">WHERE</span> u.usage_date >= <span class="text-orange-400">'${startDate}'</span>
+  <span class="text-blue-400">AND</span> u.usage_date <= <span class="text-orange-400">'${endDate}'</span>
+  <span class="text-blue-400">AND</span> u.record_type = <span class="text-orange-400">'ORIGINAL'</span>
+<span class="text-blue-400">GROUP BY</span> date, workloadType, runAs, jobId, skuName
+<span class="text-blue-400">ORDER BY</span> dollars <span class="text-blue-400">DESC</span></pre>
+        </div>
+
+        <p>
+          Results are aggregated into a <code>BillingSummary</code> object and surfaced in the sidebar tree view,
+          broken down three ways: <strong>by user</strong>, <strong>by workload type</strong>, and <strong>by job</strong>.
+          Each view is sorted by dollars descending so the most expensive items surface immediately.
+        </p>
+
+        <h2>What You See in the Dashboard</h2>
+
+        <!-- Billing mockup -->
+        <div class="billing-mock my-6 not-prose">
+          <div class="billing-mock-bar">
+            <span class="text-xs text-gray-300 font-mono">CatalystOps: Billing</span>
+            <span class="text-xs text-muted font-mono">Last 30 days — $1,284.50 · 4,281 DBUs</span>
+          </div>
+
+          <!-- By User -->
+          <div class="px-4 pt-3 pb-1">
+            <div class="text-xs text-brand font-semibold mb-2 font-mono">By User</div>
+          </div>
+          <div class="billing-row">
+            <span class="text-gray-400 w-36 truncate font-mono text-xs">alice@acme.com</span>
+            <div class="flex-1"><div class="billing-bar-fill" style="width:88%"></div></div>
+            <span class="text-gray-200 font-mono text-xs">$632.10</span>
+          </div>
+          <div class="billing-row">
+            <span class="text-gray-400 w-36 truncate font-mono text-xs">bob@acme.com</span>
+            <div class="flex-1"><div class="billing-bar-fill" style="width:42%; opacity:0.7"></div></div>
+            <span class="text-gray-200 font-mono text-xs">$301.20</span>
+          </div>
+          <div class="billing-row">
+            <span class="text-gray-400 w-36 truncate font-mono text-xs">ci-runner</span>
+            <div class="flex-1"><div class="billing-bar-fill" style="width:20%; opacity:0.5"></div></div>
+            <span class="text-gray-200 font-mono text-xs">$145.80</span>
+          </div>
+          <div class="billing-row">
+            <span class="text-gray-400 w-36 truncate font-mono text-xs">data-pipeline</span>
+            <div class="flex-1"><div class="billing-bar-fill" style="width:10%; opacity:0.4"></div></div>
+            <span class="text-gray-200 font-mono text-xs">$205.40</span>
+          </div>
+
+          <!-- By Workload -->
+          <div class="px-4 pt-4 pb-1">
+            <div class="text-xs text-brand font-semibold mb-2 font-mono">By Workload</div>
+          </div>
+          <div class="billing-row">
+            <span class="text-gray-400 w-36 truncate font-mono text-xs">JOBS</span>
+            <div class="flex-1"><div class="billing-bar-fill" style="width:72%; background:#38a169"></div></div>
+            <span class="text-gray-200 font-mono text-xs">$921.00</span>
+          </div>
+          <div class="billing-row">
+            <span class="text-gray-400 w-36 truncate font-mono text-xs">ALL_PURPOSE</span>
+            <div class="flex-1"><div class="billing-bar-fill" style="width:28%; background:#dd6b20"></div></div>
+            <span class="text-gray-200 font-mono text-xs">$363.50</span>
+          </div>
+
+          <!-- By Job -->
+          <div class="px-4 pt-4 pb-1">
+            <div class="text-xs text-brand font-semibold mb-2 font-mono">By Job</div>
+          </div>
+          <div class="billing-row">
+            <span class="text-gray-400 w-36 truncate font-mono text-xs">etl-daily-sync</span>
+            <div class="flex-1"><div class="billing-bar-fill" style="width:65%"></div></div>
+            <span class="text-gray-200 font-mono text-xs">$498.20</span>
+          </div>
+          <div class="billing-row">
+            <span class="text-gray-400 w-36 truncate font-mono text-xs">ml-training-run</span>
+            <div class="flex-1"><div class="billing-bar-fill" style="width:30%; opacity:0.7"></div></div>
+            <span class="text-gray-200 font-mono text-xs">$229.80</span>
+          </div>
+          <div class="billing-row mb-1">
+            <span class="text-gray-400 w-36 truncate font-mono text-xs">report-generator</span>
+            <div class="flex-1"><div class="billing-bar-fill" style="width:15%; opacity:0.5"></div></div>
+            <span class="text-gray-200 font-mono text-xs">$193.00</span>
+          </div>
+        </div>
+
+        <h3>Time periods</h3>
+        <p>
+          The dashboard supports three built-in periods — last 24 hours, last 7 days, and last 30 days —
+          plus custom date ranges. Period selection is remembered between sessions via the 1-hour result cache,
+          so you're not re-running the SQL on every open.
+        </p>
+
+        <h3>Warehouse auto-discovery</h3>
+        <p>
+          CatalystOps automatically selects a SQL warehouse to run the billing query, preferring serverless
+          warehouses that are already running. If you want to pin a specific warehouse, set
+          <code>catalystops.billing.warehouseId</code> in your VS Code settings.
+        </p>
+
+        <div class="callout not-prose">
+          <div class="callout-label">Cost note</div>
+          <p class="text-sm text-gray-400 leading-relaxed">
+            CatalystOps shows a confirmation prompt before fetching billing data to avoid unexpected warehouse charges.
+            The query runs against <code class="text-brand text-xs bg-card border border-border rounded px-1.5 py-0.5">system.billing.usage</code> — a Unity Catalog system table — which requires Unity Catalog to be enabled on your workspace.
+          </p>
+        </div>
+
+        <h2>Why This Matters for Engineers</h2>
+        <p>
+          Finance teams already have billing dashboards. This feature is for the engineer who just submitted
+          a job and wants to know if it's eating $50 or $500 before it becomes a Slack message from their manager.
+        </p>
+        <ul>
+          <li>Catch All-Purpose compute being used where Jobs compute should be (3x cost difference)</li>
+          <li>Spot runaway jobs before they finish their full run</li>
+          <li>Attribute spend to users so teams can self-govern their usage</li>
+          <li>Correlate cost spikes with code changes — the data is right next to your editor</li>
+        </ul>
+
+        <h2>MCP Integration</h2>
+        <p>
+          The billing data is also exposed through the CatalystOps MCP server via the
+          <code>get_billing_summary</code> and <code>refresh_billing</code> tools.
+          This means you can ask Claude directly: <em>"Which of my jobs cost the most last week?"</em>
+          and get a real answer backed by live data from your workspace.
+        </p>
+
+        <h2>Getting Started</h2>
+        <ol>
+          <li>Install CatalystOps from the <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank">VS Code Marketplace</a></li>
+          <li>Connect your Databricks workspace (<code>CatalystOps: Configure Connection</code>)</li>
+          <li>Open the CatalystOps sidebar panel</li>
+          <li>Click <strong>Fetch Billing Data</strong> — confirm the prompt</li>
+          <li>Switch between Last 24h / 7d / 30d to explore your spend</li>
+        </ol>
+
+        <p>Unity Catalog with System Tables must be enabled on your workspace. If you see a <em>"TABLE_OR_VIEW_NOT_FOUND"</em> error, contact your Databricks workspace admin to enable system tables.</p>
+
+        <hr />
+
+        <!-- CTA -->
+        <div class="not-prose bg-card border border-border rounded-xl p-10 text-center">
+          <p class="text-xs text-muted mb-2">Free and open source</p>
+          <h3 class="text-xl font-bold text-white mb-3">See where your Databricks money is going</h3>
+          <p class="text-sm text-gray-400 mb-6">Install CatalystOps and get your billing breakdown in under a minute.</p>
+          <div class="flex gap-3 justify-center flex-wrap">
+            <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" class="btn-primary" target="_blank">Install for VS Code</a>
+            <a href="https://github.com/lezwon/CatalystOps" class="btn-secondary" target="_blank">View on GitHub</a>
+          </div>
+        </div>
+
+      </article>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-border py-7">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted">
+      <div class="flex items-center gap-2">
+        <img src="/icon.png" alt="" class="w-4 h-4 opacity-40" />
+        <span>© 2026 SpendOps. All rights reserved.</span>
+      </div>
+      <div class="flex gap-6">
+        <a href="https://github.com/lezwon/CatalystOps" target="_blank" class="hover:text-white transition-colors">GitHub</a>
+        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank" class="hover:text-white transition-colors">Marketplace</a>
+        <a href="/blog/" class="hover:text-white transition-colors">Blog</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
