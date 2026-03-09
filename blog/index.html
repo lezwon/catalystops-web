@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blog · CatalystOps · SpendOps</title>
+  <meta name="description" content="Release notes, guides, and updates from the CatalystOps team." />
+  <link rel="icon" type="image/png" href="/icon.png" />
+  <link rel="canonical" href="https://spendops.dev/blog/" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#F97316', 'brand-dim': '#EA580C',
+            surface: '#0F1117', card: '#161B27',
+            border: '#1E2535', muted: '#6B7280',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body { background-color: #0F1117; }
+    .nav-link { position: relative; }
+    .nav-link::after {
+      content: ''; position: absolute; bottom: -2px; left: 0;
+      width: 0; height: 1.5px; background: #F97316;
+      transition: width 0.25s ease;
+    }
+    .nav-link:hover::after { width: 100%; }
+    .gradient-text {
+      background: linear-gradient(135deg, #fff 30%, #F97316 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 999px; padding: 4px 14px; font-size: 0.78rem; font-weight: 500; color: #F97316;
+    }
+    .post-card {
+      border: 1px solid #1E2535; border-radius: 12px; padding: 28px;
+      background: #161B27; transition: border-color 0.2s, transform 0.2s;
+      text-decoration: none; display: block;
+    }
+    .post-card:hover { border-color: rgba(249,115,22,0.4); transform: translateY(-2px); }
+    .btn-primary {
+      background: #F97316; color: #fff; font-weight: 600; border-radius: 8px;
+      padding: 10px 22px; font-size: 0.95rem; transition: background 0.2s, box-shadow 0.2s;
+      display: inline-block; text-decoration: none;
+    }
+    .btn-primary:hover { background: #EA580C; box-shadow: 0 0 28px rgba(249,115,22,0.35); }
+  </style>
+</head>
+<body class="font-sans antialiased text-white">
+
+  <!-- Nav -->
+  <nav class="sticky top-0 z-50 border-b border-[#1E2535] bg-[#0F1117]/90 backdrop-blur-md">
+    <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2">
+        <img src="/icon.png" alt="CatalystOps" class="w-7 h-7" />
+        <span class="font-bold text-white text-base">CatalystOps</span>
+        <span class="text-[#6B7280] text-sm hidden sm:inline">· SpendOps</span>
+      </a>
+      <div class="flex items-center gap-6 text-sm text-[#9CA3AF]">
+        <a href="/#features" class="nav-link hover:text-white transition-colors">Features</a>
+        <a href="/#how-it-works" class="nav-link hover:text-white transition-colors">How it works</a>
+        <a href="/blog/" class="nav-link hover:text-white transition-colors text-[#F97316]">Blog</a>
+        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
+           class="btn-primary !py-2 !px-4 !text-sm" target="_blank">Install Free</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <header class="max-w-3xl mx-auto px-6 pt-16 pb-10">
+    <span class="badge mb-4 inline-block">Blog</span>
+    <h1 class="text-4xl font-extrabold mb-4 gradient-text">Release Notes & Updates</h1>
+    <p class="text-[#9CA3AF] text-lg">What's new in CatalystOps — features, fixes, and what's coming next.</p>
+  </header>
+
+  <!-- Posts -->
+  <main class="max-w-3xl mx-auto px-6 pb-24">
+    <div class="space-y-6">
+
+      <!-- Post: 0.8.0 -->
+      <a href="/blog/spark-query-plan-visualization-vscode/" class="post-card">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="badge">Release Notes</span>
+          <span class="text-[#6B7280] text-sm">March 9, 2026</span>
+          <span class="text-[#6B7280] text-sm">· v0.8.0</span>
+        </div>
+        <h2 class="text-white font-bold text-xl mb-2">
+          See Inside Your Spark Jobs: CatalystOps 0.8.0 Brings Query Plan Visualization to VS Code
+        </h2>
+        <p class="text-[#9CA3AF] text-sm leading-relaxed mb-4">
+          CatalystOps 0.8.0 ships the Explain Plan view and DAG visualization: two new tools that bring your
+          Spark physical query plan directly into VS Code, with cost scores on every node and one-click fixes
+          for the most common performance killers.
+        </p>
+        <span class="text-[#F97316] text-sm font-medium">Read more →</span>
+      </a>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-[#1E2535] py-8">
+    <div class="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-[#6B7280]">
+      <div class="flex items-center gap-2">
+        <img src="/icon.png" alt="CatalystOps" class="w-5 h-5 opacity-60" />
+        <span>© 2026 SpendOps. All rights reserved.</span>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="https://github.com/lezwon/CatalystOps" class="hover:text-white transition-colors" target="_blank">GitHub</a>
+        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" class="hover:text-white transition-colors" target="_blank">Marketplace</a>
+        <a href="/blog/" class="hover:text-white transition-colors">Blog</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

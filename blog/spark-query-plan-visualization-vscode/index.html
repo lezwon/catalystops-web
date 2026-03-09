@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CatalystOps 0.8.0 — Query Plan Visualization · SpendOps</title>
+  <meta name="description" content="CatalystOps 0.8.0 ships the Explain Plan view and DAG visualization: two new tools that bring your Spark physical query plan directly into VS Code, with cost scores on every node and one-click fixes." />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="See Inside Your Spark Jobs: CatalystOps 0.8.0" />
+  <meta property="og:description" content="CatalystOps 0.8.0 brings Spark query plan visualization, DAG view, and context-aware quick fixes directly into VS Code." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://spendops.dev/blog/spark-query-plan-visualization-vscode/" />
+
+  <link rel="icon" type="image/png" href="/icon.png" />
+  <link rel="canonical" href="https://spendops.dev/blog/spark-query-plan-visualization-vscode/" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#F97316',
+            'brand-dim': '#EA580C',
+            surface: '#0F1117',
+            card: '#161B27',
+            border: '#1E2535',
+            muted: '#6B7280',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    body { background-color: #0F1117; color: #E5E7EB; }
+
+    .nav-link { position: relative; }
+    .nav-link::after {
+      content: ''; position: absolute; bottom: -2px; left: 0;
+      width: 0; height: 1.5px; background: #F97316;
+      transition: width 0.25s ease;
+    }
+    .nav-link:hover::after { width: 100%; }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #fff 30%, #F97316 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(249,115,22,0.1);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: #F97316;
+    }
+
+    .prose h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #1E2535;
+    }
+
+    .prose h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #F97316;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .prose p {
+      color: #9CA3AF;
+      line-height: 1.8;
+      margin-bottom: 1.25rem;
+    }
+
+    .prose strong { color: #E5E7EB; }
+
+    .prose ul {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 1.25rem;
+    }
+
+    .prose ul li {
+      color: #9CA3AF;
+      padding: 0.25rem 0 0.25rem 1.5rem;
+      position: relative;
+      line-height: 1.8;
+    }
+
+    .prose ul li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: #F97316;
+    }
+
+    .prose ol {
+      counter-reset: list-counter;
+      padding: 0;
+      margin-bottom: 1.25rem;
+    }
+
+    .prose ol li {
+      counter-increment: list-counter;
+      color: #9CA3AF;
+      padding: 0.25rem 0 0.25rem 2rem;
+      position: relative;
+      line-height: 1.8;
+    }
+
+    .prose ol li::before {
+      content: counter(list-counter);
+      position: absolute;
+      left: 0;
+      color: #F97316;
+      font-weight: 700;
+      font-size: 0.85rem;
+      background: rgba(249,115,22,0.1);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 999px;
+      width: 1.4rem;
+      height: 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      top: 0.3rem;
+    }
+
+    .prose code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85em;
+      background: #161B27;
+      border: 1px solid #1E2535;
+      border-radius: 4px;
+      padding: 2px 6px;
+      color: #F97316;
+    }
+
+    .prose hr {
+      border-color: #1E2535;
+      margin: 2.5rem 0;
+    }
+
+    .prose a {
+      color: #F97316;
+      text-decoration: none;
+    }
+    .prose a:hover { text-decoration: underline; }
+
+    .feature-card {
+      border: 1px solid #1E2535;
+      border-radius: 12px;
+      padding: 24px;
+      background: #161B27;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .feature-card:hover {
+      border-color: rgba(249,115,22,0.4);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background: #F97316; color: #fff;
+      font-weight: 600; border-radius: 8px;
+      padding: 10px 22px; font-size: 0.95rem;
+      transition: background 0.2s, box-shadow 0.2s;
+      display: inline-block;
+      text-decoration: none;
+    }
+    .btn-primary:hover {
+      background: #EA580C;
+      box-shadow: 0 0 28px rgba(249,115,22,0.35);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid #1E2535;
+      color: #D1D5DB;
+      font-weight: 500; border-radius: 8px;
+      padding: 10px 22px; font-size: 0.95rem;
+      transition: border-color 0.2s, color 0.2s;
+      display: inline-block;
+      text-decoration: none;
+    }
+    .btn-secondary:hover { border-color: #F97316; color: #fff; }
+
+    /* Table */
+    .prose table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+    }
+    .prose th {
+      background: #161B27;
+      color: #F97316;
+      font-weight: 600;
+      padding: 10px 16px;
+      text-align: left;
+      border: 1px solid #1E2535;
+    }
+    .prose td {
+      padding: 10px 16px;
+      border: 1px solid #1E2535;
+      color: #9CA3AF;
+    }
+    .prose tr:hover td { background: rgba(249,115,22,0.03); }
+  </style>
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "See Inside Your Spark Jobs: CatalystOps 0.8.0 Brings Query Plan Visualization to VS Code",
+    "description": "CatalystOps 0.8.0 ships the Explain Plan view and DAG visualization with cost scores and one-click fixes for PySpark performance issues.",
+    "datePublished": "2026-03-09",
+    "author": { "@type": "Organization", "name": "SpendOps" },
+    "publisher": { "@type": "Organization", "name": "SpendOps", "url": "https://spendops.dev" },
+    "url": "https://spendops.dev/blog/spark-query-plan-visualization-vscode/"
+  }
+  </script>
+</head>
+
+<body class="font-sans antialiased">
+
+  <!-- Nav -->
+  <nav class="sticky top-0 z-50 border-b border-[#1E2535] bg-[#0F1117]/90 backdrop-blur-md">
+    <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2">
+        <img src="/icon.png" alt="CatalystOps" class="w-7 h-7" />
+        <span class="font-bold text-white text-base">CatalystOps</span>
+        <span class="text-[#6B7280] text-sm hidden sm:inline">· SpendOps</span>
+      </a>
+      <div class="flex items-center gap-6 text-sm text-[#9CA3AF]">
+        <a href="/#features" class="nav-link hover:text-white transition-colors">Features</a>
+        <a href="/#how-it-works" class="nav-link hover:text-white transition-colors">How it works</a>
+        <a href="/blog/" class="nav-link hover:text-white transition-colors text-[#F97316]">Blog</a>
+        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
+           class="btn-primary !py-2 !px-4 !text-sm" target="_blank">Install Free</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="max-w-3xl mx-auto px-6 pt-16 pb-10">
+    <div class="mb-4 flex items-center gap-3">
+      <span class="badge">Release Notes</span>
+      <span class="text-[#6B7280] text-sm">March 9, 2026</span>
+    </div>
+    <h1 class="text-3xl sm:text-4xl font-extrabold leading-tight mb-6">
+      <span class="gradient-text">See Inside Your Spark Jobs:</span><br/>
+      CatalystOps 0.8.0 Brings Query Plan Visualization to VS Code
+    </h1>
+    <p class="text-[#9CA3AF] text-lg leading-relaxed">
+      If you've ever stared at a slow Databricks job wondering <em>why</em> it's slow — this release is for you.
+      CatalystOps 0.8.0 ships the <strong class="text-white">Explain Plan view</strong> and <strong class="text-white">DAG visualization</strong>:
+      two new tools that bring your Spark physical query plan directly into VS Code, with cost scores on every node
+      and one-click fixes for the most common performance killers.
+    </p>
+  </header>
+
+  <div class="max-w-3xl mx-auto px-6">
+    <hr class="border-[#1E2535] mb-10" />
+  </div>
+
+  <!-- Content -->
+  <main class="max-w-3xl mx-auto px-6 pb-24 prose">
+
+    <h2>The Problem</h2>
+    <p>
+      Debugging a slow PySpark job has always meant leaving your editor, navigating to the Databricks UI,
+      clicking through the Spark UI, squinting at a wall of plan text, and then manually figuring out what to do about it.
+    </p>
+    <p>
+      Even experienced data engineers find the raw physical plan hard to read. And once you've identified the problem —
+      a bad join, an unnecessary shuffle, a repeated scan — you still have to remember the right fix and apply it by hand.
+    </p>
+    <p><strong>CatalystOps 0.8.0 changes that.</strong></p>
+
+    <h2>What's New</h2>
+
+    <!-- Feature cards -->
+    <div class="grid gap-4 my-8 not-prose">
+      <div class="feature-card">
+        <div class="text-2xl mb-3">🌳</div>
+        <h3 class="text-white font-bold text-lg mb-2">Explain Plan View</h3>
+        <p class="text-[#9CA3AF] text-sm leading-relaxed">
+          After a dry run, CatalystOps populates a <strong class="text-white">sidebar tree</strong> showing your full
+          physical query plan — broken down node by node, with a <strong class="text-white">cost score</strong> on each operation.
+          Sort-merge joins, exchanges (shuffles), and repeated scans get flagged automatically so you know exactly where your DBUs are going.
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="text-2xl mb-3">🔀</div>
+        <h3 class="text-white font-bold text-lg mb-2">Interactive DAG Visualization</h3>
+        <p class="text-[#9CA3AF] text-sm leading-relaxed">
+          Open the <strong class="text-white">Plan DAG</strong> (<code>CatalystOps: Show Plan DAG</code>) to see your query
+          rendered as an interactive graph in a VS Code webview panel. Makes it immediately obvious when your plan has
+          unnecessary stages, fan-outs, or redundant operations.
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="text-2xl mb-3">⚡</div>
+        <h3 class="text-white font-bold text-lg mb-2">Context-Aware Quick Fixes</h3>
+        <p class="text-[#9CA3AF] text-sm leading-relaxed mb-4">
+          CatalystOps doesn't just show you the problem — it offers <strong class="text-white">one-click fixes</strong>
+          directly on plan tree nodes, generated from the actual plan for your specific query:
+        </p>
+        <table class="w-full text-sm not-prose border-collapse">
+          <thead>
+            <tr>
+              <th class="text-left py-2 px-3 bg-[#0F1117] text-[#F97316] font-semibold border border-[#1E2535]">Problem detected</th>
+              <th class="text-left py-2 px-3 bg-[#0F1117] text-[#F97316] font-semibold border border-[#1E2535]">Quick fix offered</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="py-2 px-3 text-[#9CA3AF] border border-[#1E2535]">Inefficient join (missing broadcast)</td>
+              <td class="py-2 px-3 text-[#9CA3AF] border border-[#1E2535]">Add broadcast hint</td>
+            </tr>
+            <tr>
+              <td class="py-2 px-3 text-[#9CA3AF] border border-[#1E2535]">Unnecessary exchange / shuffle</td>
+              <td class="py-2 px-3 text-[#9CA3AF] border border-[#1E2535]">Add repartition hint</td>
+            </tr>
+            <tr>
+              <td class="py-2 px-3 text-[#9CA3AF] border border-[#1E2535]">Repeated scan without caching</td>
+              <td class="py-2 px-3 text-[#9CA3AF] border border-[#1E2535]">Add <code>.persist()</code></td>
+            </tr>
+            <tr>
+              <td class="py-2 px-3 text-[#9CA3AF] border border-[#1E2535]">Sort-merge join with AQE disabled</td>
+              <td class="py-2 px-3 text-[#9CA3AF] border border-[#1E2535]">Set AQE config</td>
+            </tr>
+            <tr>
+              <td class="py-2 px-3 text-[#9CA3AF] border border-[#1E2535]">Cartesian product</td>
+              <td class="py-2 px-3 text-[#9CA3AF] border border-[#1E2535]">Add join condition hint</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="feature-card">
+        <div class="text-2xl mb-3">⏱️</div>
+        <h3 class="text-white font-bold text-lg mb-2">Configurable Dry-Run Timeout</h3>
+        <p class="text-[#9CA3AF] text-sm leading-relaxed">
+          Set your own timeout via <code>catalystops.dryRun.timeoutSeconds</code> (default: 300s, minimum: 30s).
+          No more jobs silently timing out mid-analysis.
+        </p>
+      </div>
+    </div>
+
+    <h2>Why This Matters</h2>
+    <p>
+      Most PySpark performance issues fall into a handful of categories: bad joins, unnecessary shuffles,
+      repeated scans, missing statistics. They're common, they're expensive, and they're fixable — if you can spot them.
+    </p>
+    <p>
+      The problem has always been visibility. The Spark physical plan contains everything you need,
+      but it's buried in a UI most developers don't open until something is already on fire.
+    </p>
+    <p>
+      CatalystOps 0.8.0 brings that visibility into your editor, <strong>before you ship to production</strong>,
+      with the fixes already written for you.
+    </p>
+
+    <h2>Getting Started</h2>
+    <ol>
+      <li>Install CatalystOps from the <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank">VS Code Marketplace</a> or <a href="https://open-vsx.org/extension/CatalystOps/catalystops" target="_blank">Open VSX</a></li>
+      <li>Connect your Databricks workspace in the extension settings</li>
+      <li>Open a PySpark file and run a dry run (<code>CatalystOps: Run Dry Run</code>)</li>
+      <li>Open the <strong>Explain Plan</strong> panel in the sidebar</li>
+      <li>Click any node to see cost details and available quick fixes</li>
+      <li>Open the DAG view (<code>CatalystOps: Show Plan DAG</code>)</li>
+    </ol>
+
+    <h2>What's Next</h2>
+    <p>
+      0.8.0 lays the groundwork for deeper plan analysis. Coming up: multi-file plan correlation,
+      historical plan comparison, and cost trend tracking across runs.
+    </p>
+    <p>
+      Got feedback? Open an issue on <a href="https://github.com/lezwon/CatalystOps" target="_blank">GitHub</a>
+      or drop a comment on the <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank">VS Code Marketplace</a>.
+    </p>
+
+    <hr />
+
+    <!-- CTA -->
+    <div class="not-prose bg-[#161B27] border border-[#1E2535] rounded-xl p-8 text-center">
+      <p class="text-[#6B7280] text-sm mb-2">Free & open source</p>
+      <h3 class="text-white font-bold text-xl mb-4">Try CatalystOps today</h3>
+      <p class="text-[#9CA3AF] text-sm mb-6">Catch PySpark performance issues before they hit production — inline, in your editor.</p>
+      <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" class="btn-primary" target="_blank">
+          Install for VS Code
+        </a>
+        <a href="https://github.com/lezwon/CatalystOps" class="btn-secondary" target="_blank">
+          View on GitHub
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-[#1E2535] py-8 mt-8">
+    <div class="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-[#6B7280]">
+      <div class="flex items-center gap-2">
+        <img src="/icon.png" alt="CatalystOps" class="w-5 h-5 opacity-60" />
+        <span>© 2026 SpendOps. All rights reserved.</span>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="https://github.com/lezwon/CatalystOps" class="hover:text-white transition-colors" target="_blank">GitHub</a>
+        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" class="hover:text-white transition-colors" target="_blank">Marketplace</a>
+        <a href="/blog/" class="hover:text-white transition-colors">Blog</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
