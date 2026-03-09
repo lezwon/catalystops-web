@@ -1,561 +1,477 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
- <meta charset="UTF-8" />
- <meta name="viewport" content="width=device-width, initial-scale=1.0" />
- <title>See Inside Your Spark Jobs: CatalystOps 0.8.0 · SpendOps Blog</title>
- <meta name="description" content="CatalystOps 0.8.0 ships the Explain Plan view and DAG visualization: two new tools that bring your Spark physical query plan directly into VS Code, with cost scores on every node and one-click fixes." />
- <meta property="og:title" content="See Inside Your Spark Jobs: CatalystOps 0.8.0" />
- <meta property="og:description" content="CatalystOps 0.8.0 brings Spark query plan visualization, DAG view, and context-aware quick fixes directly into VS Code." />
- <meta property="og:type" content="article" />
- <meta property="og:url" content="https://spendops.dev/blog/spark-query-plan-visualization-vscode/" />
- <link rel="icon" type="image/png" href="/icon.png" />
- <link rel="canonical" href="https://spendops.dev/blog/spark-query-plan-visualization-vscode/" />
- <link rel="preconnect" href="https://fonts.googleapis.com" />
- <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
- <script type="application/ld+json">
- {
- "@context": "https://schema.org",
- "@type": "BlogPosting",
- "headline": "See Inside Your Spark Jobs: CatalystOps 0.8.0 Brings Query Plan Visualization to VS Code",
- "datePublished": "2026-03-09",
- "author": { "@type": "Organization", "name": "SpendOps" },
- "publisher": { "@type": "Organization", "name": "SpendOps", "url": "https://spendops.dev" },
- "url": "https://spendops.dev/blog/spark-query-plan-visualization-vscode/"
- }
- </script>
- <style>
- *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
- :root {
- --bg: #0F1117; --card: #161B27; --border: #1E2535;
- --muted: #6B7280; --text: #9CA3AF; --heading: #F3F4F6;
- --brand: #F97316; --brand-dim: #EA580C;
- }
- html { background: var(--bg); }
- body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; -webkit-font-smoothing: antialiased; }
- a { color: inherit; text-decoration: none; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>See Inside Your Spark Jobs: CatalystOps 0.8.0 · SpendOps Blog</title>
+  <meta name="description" content="CatalystOps 0.8.0 ships the Explain Plan view and DAG visualization: two new tools that bring your Spark physical query plan directly into VS Code, with cost scores on every node and one-click fixes." />
+  <meta property="og:title" content="See Inside Your Spark Jobs: CatalystOps 0.8.0" />
+  <meta property="og:description" content="CatalystOps 0.8.0 brings Spark query plan visualization, DAG view, and context-aware quick fixes directly into VS Code." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://spendops.dev/blog/spark-query-plan-visualization-vscode/" />
+  <link rel="icon" type="image/png" href="/icon.png" />
+  <link rel="canonical" href="https://spendops.dev/blog/spark-query-plan-visualization-vscode/" />
 
- /* Nav */
- nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; border-bottom: 1px solid var(--border); background: rgba(15,17,23,0.9); backdrop-filter: blur(12px); height: 60px; display: flex; align-items: center; }
- .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; width: 100%; display: flex; align-items: center; justify-content: space-between; }
- .nav-brand { display: flex; align-items: center; gap: 8px; }
- .nav-brand img { width: 26px; height: 26px; }
- .nav-brand-name { font-weight: 700; font-size: 0.95rem; color: var(--heading); }
- .nav-brand-by { font-size: 0.72rem; color: var(--muted); margin-left: 2px; }
- .nav-links { display: flex; align-items: center; gap: 24px; }
- .nav-links a { font-size: 0.85rem; color: #9CA3AF; transition: color 0.2s; }
- .nav-links a:hover { color: #fff; }
- .nav-links a.active { color: var(--brand); }
- .btn-install { background: var(--brand); color: #fff !important; font-weight: 600; font-size: 0.85rem; border-radius: 7px; padding: 7px 18px; transition: background 0.2s, box-shadow 0.2s; }
- .btn-install:hover { background: var(--brand-dim); box-shadow: 0 0 18px rgba(249,115,22,0.3); }
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#F97316', 'brand-dim': '#EA580C',
+            surface: '#0F1117', card: '#161B27',
+            border: '#1E2535', muted: '#6B7280',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/theme.css" />
 
- /* Layout */
- .page { padding-top: 64px; }
- .container { max-width: 700px; margin: 0 auto; padding: 0 24px; }
-
- /* Breadcrumb */
- .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--muted); padding: 24px 0 0; }
- .breadcrumb a:hover { color: var(--brand); }
- .breadcrumb-sep { color: var(--border); }
-
- /* Article header */
- .article-header { padding: 20px 0 36px; border-bottom: 1px solid var(--border); margin-bottom: 44px; }
- .article-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
- .tag { display: inline-flex; align-items: center; background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.25); border-radius: 999px; padding: 3px 11px; font-size: 0.73rem; font-weight: 500; color: var(--brand); }
- .article-date { font-size: 0.78rem; color: var(--muted); }
- .article-version { font-size: 0.72rem; color: var(--muted); background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
- .article-title { font-size: 1.9rem; font-weight: 800; line-height: 1.2; color: var(--heading); margin-bottom: 18px; }
- .article-title .accent { color: var(--brand); }
- .article-lead { font-size: 1.05rem; color: #9CA3AF; line-height: 1.75; }
- .article-lead strong { color: var(--heading); }
-
- /* Article body */
- .article-body { padding-bottom: 64px; }
- .article-body h2 { font-size: 1.3rem; font-weight: 700; color: var(--heading); margin: 44px 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
- .article-body h3 { font-size: 1rem; font-weight: 600; color: var(--brand); margin: 28px 0 10px; }
- .article-body p { margin-bottom: 18px; line-height: 1.8; }
- .article-body p strong { color: var(--heading); }
- .article-body p em { font-style: italic; }
- .article-body ul { margin: 0 0 18px; padding: 0; list-style: none; }
- .article-body ul li { padding: 5px 0 5px 22px; position: relative; line-height: 1.7; }
- .article-body ul li::before { content: '→'; position: absolute; left: 0; color: var(--brand); }
- .article-body ol { margin: 0 0 18px; padding: 0; list-style: none; counter-reset: ol; }
- .article-body ol li { counter-increment: ol; padding: 7px 0 7px 38px; position: relative; line-height: 1.7; }
- .article-body ol li::before { content: counter(ol); position: absolute; left: 0; top: 8px; width: 22px; height: 22px; background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.3); border-radius: 50%; font-size: 0.72rem; font-weight: 700; color: var(--brand); display: flex; align-items: center; justify-content: center; }
- .article-body code { font-family: 'JetBrains Mono', monospace; font-size: 0.82em; background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; color: var(--brand); }
- .article-body a { color: var(--brand); }
- .article-body a:hover { text-decoration: underline; }
- .article-body hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
-
- /* Table */
- .article-body table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.875rem; }
- .article-body th { background: var(--card); color: var(--brand); font-weight: 600; padding: 10px 14px; text-align: left; border: 1px solid var(--border); }
- .article-body td { padding: 9px 14px; border: 1px solid var(--border); }
- .article-body tr:nth-child(even) td { background: rgba(22,27,39,0.6); }
-
- /* Callout */
- .callout { background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; padding: 18px 22px; margin: 24px 0; }
- .callout-label { font-size: 0.72rem; font-weight: 600; color: var(--brand); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
- .callout p { margin: 0; font-size: 0.88rem; line-height: 1.65; }
-
- /* CTA */
- .cta-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 36px 32px; text-align: center; margin: 44px 0; }
- .cta-box .eyebrow { font-size: 0.72rem; color: var(--muted); margin-bottom: 8px; }
- .cta-box h3 { font-size: 1.2rem; font-weight: 700; color: var(--heading); margin-bottom: 10px; }
- .cta-box p { font-size: 0.875rem; margin-bottom: 22px; }
- .cta-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
- .btn-primary { background: var(--brand); color: #fff !important; font-weight: 600; font-size: 0.9rem; border-radius: 8px; padding: 11px 24px; transition: background 0.2s, box-shadow 0.2s; display: inline-block; text-decoration: none !important; }
- .btn-primary:hover { text-decoration: none; background: var(--brand-dim); box-shadow: 0 0 18px rgba(249,115,22,0.3); }
- .btn-secondary { background: transparent; color: #D1D5DB !important; border: 1px solid var(--border); font-weight: 600; font-size: 0.9rem; border-radius: 8px; padding: 11px 24px; transition: border-color 0.2s, color 0.2s; display: inline-block; text-decoration: none !important; }
- .btn-secondary:hover { border-color: var(--brand); color: #fff !important; text-decoration: none; }
-
- /* Footer */
- footer { border-top: 1px solid var(--border); padding: 24px 0; }
- .footer-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
- .footer-left { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--muted); }
- .footer-left img { width: 16px; height: 16px; opacity: 0.4; }
- .footer-right { display: flex; gap: 18px; }
- .footer-right a { font-size: 0.78rem; color: var(--muted); transition: color 0.2s; }
- .footer-right a:hover { color: #fff; }
-
- @media (max-width: 600px) {
- .article-title { font-size: 1.4rem; }
- .nav-links { display: none; }
- }
- </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "See Inside Your Spark Jobs: CatalystOps 0.8.0 Brings Query Plan Visualization to VS Code",
+    "datePublished": "2026-03-09",
+    "author": { "@type": "Organization", "name": "SpendOps" },
+    "publisher": { "@type": "Organization", "name": "SpendOps", "url": "https://spendops.dev" },
+    "url": "https://spendops.dev/blog/spark-query-plan-visualization-vscode/"
+  }
+  </script>
 </head>
-<body>
+<body class="text-gray-100 font-sans antialiased">
 
- <nav>
- <div class="nav-inner">
- <a href="/" class="nav-brand">
- <img src="/icon.png" alt="CatalystOps" />
- <span class="nav-brand-name">CatalystOps</span>
- <span class="nav-brand-by">by SpendOps</span>
- </a>
- <div class="nav-links">
- <a href="/#features">Features</a>
- <a href="/#how-it-works">How it works</a>
- <a href="/#rules">Rules</a>
- <a href="/#mcp">MCP</a>
- <a href="/blog/" class="active">Blog</a>
- </div>
- <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" class="btn-nav" target="_blank">Install Free</a>
- </div>
- </nav>
+  <!-- ── Nav ──────────────────────────────────────────────────────────────── -->
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-border bg-surface/80 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <a href="/" class="flex items-center gap-2.5">
+          <img src="/icon.png" alt="CatalystOps" class="w-7 h-7" />
+          <span class="font-bold text-lg tracking-tight">CatalystOps</span>
+        </a>
+        <span class="text-xs text-muted font-normal whitespace-nowrap">by&nbsp;<a href="/" class="hover:text-white transition-colors">SpendOps</a></span>
+      </div>
+      <div class="hidden md:flex items-center gap-8 text-sm text-gray-400">
+        <a href="/#features" class="nav-link hover:text-white transition-colors">Features</a>
+        <a href="/#how-it-works" class="nav-link hover:text-white transition-colors">How it works</a>
+        <a href="/#rules" class="nav-link hover:text-white transition-colors">Rules</a>
+        <a href="/#mcp" class="nav-link hover:text-white transition-colors">MCP</a>
+        <a href="/blog/" class="nav-link text-brand">Blog</a>
+      </div>
+      <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
+         target="_blank"
+         class="btn-nav">Install Free</a>
+    </div>
+  </nav>
 
- <div class="page">
- <div class="container">
+  <!-- Page -->
+  <div class="pt-16">
+    <div class="max-w-[700px] mx-auto px-6">
 
- <div class="breadcrumb">
- <a href="/">Home</a>
- <span class="breadcrumb-sep">›</span>
- <a href="/blog/">Blog</a>
- <span class="breadcrumb-sep">›</span>
- <span style="color:#9CA3AF">CatalystOps 0.8.0</span>
- </div>
+      <!-- Breadcrumb -->
+      <div class="flex items-center gap-2 text-xs text-muted pt-6">
+        <a href="/" class="hover:text-brand transition-colors">Home</a>
+        <span class="text-border">›</span>
+        <a href="/blog/" class="hover:text-brand transition-colors">Blog</a>
+        <span class="text-border">›</span>
+        <span class="text-gray-400">CatalystOps 0.8.0</span>
+      </div>
 
- <header class="article-header">
- <div class="article-meta">
- <span class="tag">Release Notes</span>
- <span class="article-date">March 9, 2026</span>
- <span class="article-version">v0.8.0</span>
- </div>
- <h1 class="article-title">
- See Inside Your Spark Jobs:<br/>
- <span class="accent">Query Plan Visualization</span> Comes to VS Code
- </h1>
- <p class="article-lead">
- If you've ever stared at a slow Databricks job wondering <em>why</em> it's slow — this release is for you.
- CatalystOps 0.8.0 ships the <strong>Explain Plan view</strong> and <strong>DAG visualization</strong>:
- two new tools that bring your Spark physical query plan directly into VS Code, with cost scores on every node
- and one-click fixes for the most common performance killers.
- </p>
- </header>
+      <!-- Article header -->
+      <header class="pt-5 pb-10 border-b border-border mb-12">
+        <div class="flex items-center gap-3 mb-5 flex-wrap">
+          <span class="badge">Release Notes</span>
+          <span class="text-xs text-muted">March 9, 2026</span>
+          <span class="text-xs text-muted font-mono bg-card border border-border rounded px-2 py-0.5">v0.8.0</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold leading-tight mb-5">
+          <span class="gradient-text">See Inside Your Spark Jobs:</span><br/>
+          Query Plan Visualization Comes to VS Code
+        </h1>
+        <p class="text-lg text-gray-400 leading-relaxed">
+          If you've ever stared at a slow Databricks job wondering <em>why</em> it's slow — this release is for you.
+          CatalystOps 0.8.0 ships the <strong class="text-gray-200">Explain Plan view</strong> and <strong class="text-gray-200">DAG visualization</strong>:
+          two new tools that bring your Spark physical query plan directly into VS Code, with cost scores on every node
+          and one-click fixes for the most common performance killers.
+        </p>
+      </header>
 
- <article class="article-body">
+      <!-- Article -->
+      <article class="prose pb-10 sm:pb-24">
 
- <h2>The Problem</h2>
- <p>Debugging a slow PySpark job has always meant leaving your editor, navigating to the Databricks UI, clicking through the Spark UI, squinting at a wall of plan text, and then manually figuring out what to do about it.</p>
- <p>Even experienced data engineers find the raw physical plan hard to read. And once you've identified the problem — a bad join, an unnecessary shuffle, a repeated scan — you still have to remember the right fix and apply it by hand.</p>
- <p><strong>CatalystOps 0.8.0 changes that.</strong></p>
+        <h2>The Problem</h2>
+        <p>Debugging a slow PySpark job has always meant leaving your editor, navigating to the Databricks UI, clicking through the Spark UI, squinting at a wall of plan text, and then manually figuring out what to do about it.</p>
+        <p>Even experienced data engineers find the raw physical plan hard to read. And once you've identified the problem — a bad join, an unnecessary shuffle, a repeated scan — you still have to remember the right fix and apply it by hand.</p>
+        <p><strong>CatalystOps 0.8.0 changes that.</strong></p>
 
- <h2>What's New in 0.8.0</h2>
+        <h2>What's New in 0.8.0</h2>
 
- <h3> Explain Plan View</h3>
- <p>After running a dry run against your Databricks cluster, CatalystOps now populates a <strong>sidebar tree</strong> showing your full physical query plan — broken down node by node, with a <strong>cost score</strong> on each operation.</p>
- <p>No more digging through Spark UI. The plan lives in your editor, right next to your code. Sort-merge joins, exchanges (shuffles), and repeated scans are flagged automatically so you know exactly where your DBUs are going.</p>
+        <h3>🔍 Explain Plan View</h3>
+        <p>After running a dry run against your Databricks cluster, CatalystOps now populates a <strong>sidebar tree</strong> showing your full physical query plan — broken down node by node, with a <strong>cost score</strong> on each operation.</p>
+        <p>No more digging through Spark UI. The plan lives in your editor, right next to your code. Sort-merge joins, exchanges (shuffles), and repeated scans are flagged automatically so you know exactly where your DBUs are going.</p>
 
- <h3> Interactive DAG Visualization</h3>
- <p>Open the Plan DAG (<code>CatalystOps: Show Plan DAG</code>) to see your query rendered as an interactive graph in a VS Code webview panel. It makes immediately obvious when your plan has unnecessary stages, fan-outs, or redundant operations that wouldn't be visible in the tree view.</p>
+        <h3>🗺 Interactive DAG Visualization</h3>
+        <p>Open the Plan DAG (<code>CatalystOps: Show Plan DAG</code>) to see your query rendered as an interactive graph in a VS Code webview panel. It makes immediately obvious when your plan has unnecessary stages, fan-outs, or redundant operations that wouldn't be visible in the tree view.</p>
 
- <!-- DAG Visualization -->
-<div class="viz-section">
- <div class="viz-header">
- <div class="viz-title">
- <span class="viz-icon"></span>
- <span>Live Example: Query Plan DAG</span>
- </div>
- <div class="viz-subtitle">A typical PySpark join query — click any node to see what CatalystOps flags</div>
- </div>
+        <!-- DAG Visualization -->
+        <div class="viz-section not-prose">
+          <div class="viz-header">
+            <div class="viz-title">
+              <span class="viz-icon">🗺</span>
+              <span>Live Example: Query Plan DAG</span>
+            </div>
+            <div class="viz-subtitle">A typical PySpark join query — click any node to see what CatalystOps flags</div>
+          </div>
 
- <div class="viz-wrap">
- <!-- Code panel -->
- <div class="code-panel">
- <div class="code-titlebar">
- <span class="dot dot-red"></span>
- <span class="dot dot-yellow"></span>
- <span class="dot dot-green"></span>
- <span class="code-filename">analysis.py</span>
- </div>
- <pre class="code-body"><span class="kw">orders</span> = spark.table(<span class="str">"orders"</span>)
+          <div class="viz-wrap">
+            <!-- Code panel -->
+            <div class="code-panel">
+              <div style="display:flex;align-items:center;gap:6px;padding:9px 14px;background:#161B27;border-bottom:1px solid #1E2535;">
+                <span style="width:11px;height:11px;background:#FF5F57;border-radius:50%;flex-shrink:0;"></span>
+                <span style="width:11px;height:11px;background:#FFBD2E;border-radius:50%;flex-shrink:0;"></span>
+                <span style="width:11px;height:11px;background:#28C840;border-radius:50%;flex-shrink:0;"></span>
+                <span class="code-filename">analysis.py</span>
+              </div>
+              <pre class="code-body"><span class="kw">orders</span> = spark.table(<span class="str">"orders"</span>)
 <span class="kw">customers</span> = spark.table(<span class="str">"customers"</span>)
 <span class="kw">products</span> = spark.table(<span class="str">"products"</span>)
 
 <span class="cm"># Large join — no broadcast hints</span>
 <span class="kw">result</span> = (
- orders
- .<span class="fn">join</span>(customers, <span class="str">"customer_id"</span>)
- .<span class="fn">join</span>(products, <span class="str">"product_id"</span>)
- .<span class="fn">groupBy</span>(<span class="str">"region"</span>)
- .<span class="fn">agg</span>(F.<span class="fn">sum</span>(<span class="str">"revenue"</span>))
+  orders
+  .<span class="fn">join</span>(customers, <span class="str">"customer_id"</span>)
+  .<span class="fn">join</span>(products, <span class="str">"product_id"</span>)
+  .<span class="fn">groupBy</span>(<span class="str">"region"</span>)
+  .<span class="fn">agg</span>(F.<span class="fn">sum</span>(<span class="str">"revenue"</span>))
 )</pre>
- </div>
+            </div>
 
- <!-- DAG panel -->
- <div class="dag-panel">
- <div class="dag-titlebar">
- <span>CatalystOps: Plan DAG</span>
- <span class="dag-badge">2 issues found</span>
- </div>
- <div class="dag-canvas" id="dagCanvas">
- <svg id="dagSvg" width="100%" viewBox="0 0 560 420" xmlns="http://www.w3.org/2000/svg">
- <defs>
- <filter id="glow-red" x="-40%" y="-40%" width="180%" height="180%">
- <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/>
- <feFlood flood-color="#e53e3e" flood-opacity="0.7" result="color"/>
- <feComposite in="color" in2="blur" operator="in" result="glow"/>
- <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
- </filter>
- <filter id="glow-orange" x="-40%" y="-40%" width="180%" height="180%">
- <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>
- <feFlood flood-color="#dd6b20" flood-opacity="0.5" result="color"/>
- <feComposite in="color" in2="blur" operator="in" result="glow"/>
- <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
- </filter>
- <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
- <path d="M0,0 L0,6 L8,3 z" fill="#4A5568"/>
- </marker>
- </defs>
+            <!-- DAG panel -->
+            <div class="dag-panel">
+              <div class="dag-titlebar">
+                <span>CatalystOps: Plan DAG</span>
+                <span class="dag-badge">2 issues found</span>
+              </div>
+              <div class="dag-canvas" id="dagCanvas">
+                <svg id="dagSvg" width="100%" viewBox="0 0 560 420" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <filter id="glow-red" x="-40%" y="-40%" width="180%" height="180%">
+                      <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/>
+                      <feFlood flood-color="#e53e3e" flood-opacity="0.7" result="color"/>
+                      <feComposite in="color" in2="blur" operator="in" result="glow"/>
+                      <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                    <filter id="glow-orange" x="-40%" y="-40%" width="180%" height="180%">
+                      <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>
+                      <feFlood flood-color="#dd6b20" flood-opacity="0.5" result="color"/>
+                      <feComposite in="color" in2="blur" operator="in" result="glow"/>
+                      <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                      <path d="M0,0 L0,6 L8,3 z" fill="#4A5568"/>
+                    </marker>
+                  </defs>
 
- <!-- Edges (curved bezier paths matching dagWebview.ts algorithm) -->
- <!-- HashAggregate → Exchange -->
- <path d="M280,48 C280,80 280,80 280,112" stroke="#4A5568" stroke-width="1.5" fill="none"/>
- <!-- Exchange → SortMergeJoin -->
- <path d="M280,156 C280,188 280,188 280,220" stroke="#4A5568" stroke-width="1.5" fill="none"/>
- <!-- SortMergeJoin → Exchange (left) -->
- <path d="M264,264 C200,296 160,296 160,328" stroke="#4A5568" stroke-width="1.5" fill="none"/>
- <!-- SortMergeJoin → SortMergeJoin (right) -->
- <path d="M296,264 C360,296 400,296 400,328" stroke="#4A5568" stroke-width="1.5" fill="none"/>
- <!-- Exchange left → FileScan orders -->
- <path d="M160,372 C100,396 80,396 80,412" stroke="#4A5568" stroke-width="1.5" fill="none"/>
- <!-- Exchange left → FileScan customers -->
- <path d="M160,372 C200,396 220,396 220,412" stroke="#4A5568" stroke-width="1.5" fill="none"/>
- <!-- SortMergeJoin right → FileScan products -->
- <path d="M400,372 C400,396 400,396 400,412" stroke="#4A5568" stroke-width="1.5" fill="none"/>
+                  <!-- Edges -->
+                  <path d="M280,48 C280,80 280,80 280,112" stroke="#4A5568" stroke-width="1.5" fill="none"/>
+                  <path d="M280,156 C280,188 280,188 280,220" stroke="#4A5568" stroke-width="1.5" fill="none"/>
+                  <path d="M264,264 C200,296 160,296 160,328" stroke="#4A5568" stroke-width="1.5" fill="none"/>
+                  <path d="M296,264 C360,296 400,296 400,328" stroke="#4A5568" stroke-width="1.5" fill="none"/>
+                  <path d="M160,372 C100,396 80,396 80,412" stroke="#4A5568" stroke-width="1.5" fill="none"/>
+                  <path d="M160,372 C200,396 220,396 220,412" stroke="#4A5568" stroke-width="1.5" fill="none"/>
+                  <path d="M400,372 C400,396 400,396 400,412" stroke="#4A5568" stroke-width="1.5" fill="none"/>
 
- <!-- HashAggregate - OK (green) -->
- <g class="dag-node" data-id="hash-agg" onclick="selectNode(this, 'HashAggregate', 'none', 'Aggregates results by region. No issues detected.', 0)">
- <rect x="215" y="10" width="130" height="38" rx="6" fill="#38a169" opacity="0.9"/>
- <text x="280" y="24" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="ui-monospace,monospace">HashAggregate</text>
- <text x="280" y="38" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9" font-family="ui-monospace,monospace">sum(revenue)</text>
- </g>
+                  <!-- HashAggregate - OK (green) -->
+                  <g class="dag-node" data-id="hash-agg" onclick="selectNode(this, 'HashAggregate', 'none', 'Aggregates results by region. No issues detected.', 0)">
+                    <rect x="215" y="10" width="130" height="38" rx="6" fill="#38a169" opacity="0.9"/>
+                    <text x="280" y="24" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="ui-monospace,monospace">HashAggregate</text>
+                    <text x="280" y="38" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9" font-family="ui-monospace,monospace">sum(revenue)</text>
+                  </g>
 
- <!-- Exchange - WARNING (orange glow) -->
- <g class="dag-node" data-id="exchange" onclick="selectNode(this, 'Exchange (Shuffle)', 'warning', 'Full shuffle across cluster detected. All data must be redistributed before aggregation. Consider repartitioning on the groupBy key earlier in the pipeline.', 30)">
- <rect x="215" y="112" width="130" height="38" rx="6" fill="#dd6b20" filter="url(#glow-orange)" opacity="0.9"/>
- <text x="280" y="126" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="ui-monospace,monospace">Exchange</text>
- <text x="280" y="140" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9" font-family="ui-monospace,monospace">hashpartition · 30 pts</text>
- </g>
+                  <!-- Exchange - WARNING (orange glow) -->
+                  <g class="dag-node" data-id="exchange" onclick="selectNode(this, 'Exchange (Shuffle)', 'warning', 'Full shuffle across cluster detected. All data must be redistributed before aggregation. Consider repartitioning on the groupBy key earlier in the pipeline.', 30)">
+                    <rect x="215" y="112" width="130" height="38" rx="6" fill="#dd6b20" filter="url(#glow-orange)" opacity="0.9"/>
+                    <text x="280" y="126" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="ui-monospace,monospace">Exchange</text>
+                    <text x="280" y="140" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9" font-family="ui-monospace,monospace">hashpartition · 30 pts</text>
+                  </g>
 
- <!-- SortMergeJoin - CRITICAL (red glow) -->
- <g class="dag-node" data-id="smj1" onclick="selectNode(this, 'SortMergeJoin', 'critical', 'Sort-merge join requires sorting both inputs and shuffling across the cluster. If either side is small, use the broadcast() hint or increase spark.sql.autoBroadcastJoinThreshold.', 50)">
- <rect x="215" y="220" width="130" height="38" rx="6" fill="#e53e3e" filter="url(#glow-red)" opacity="0.9"/>
- <text x="280" y="234" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="ui-monospace,monospace">SortMergeJoin</text>
- <text x="280" y="248" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9" font-family="ui-monospace,monospace">orders ⋈ customers · 50 pts</text>
- </g>
+                  <!-- SortMergeJoin - CRITICAL (red glow) -->
+                  <g class="dag-node" data-id="smj1" onclick="selectNode(this, 'SortMergeJoin', 'critical', 'Sort-merge join requires sorting both inputs and shuffling across the cluster. If either side is small, use the broadcast() hint or increase spark.sql.autoBroadcastJoinThreshold.', 50)">
+                    <rect x="215" y="220" width="130" height="38" rx="6" fill="#e53e3e" filter="url(#glow-red)" opacity="0.9"/>
+                    <text x="280" y="234" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="ui-monospace,monospace">SortMergeJoin</text>
+                    <text x="280" y="248" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9" font-family="ui-monospace,monospace">orders ⋈ customers · 50 pts</text>
+                  </g>
 
- <!-- Exchange left of join - WARNING -->
- <g class="dag-node" data-id="exchange2" onclick="selectNode(this, 'Exchange (Shuffle)', 'warning', 'Shuffle required before sort-merge join. Both sides must be repartitioned on the join key. Adding a broadcast hint on the smaller table eliminates this shuffle entirely.', 30)">
- <rect x="95" y="328" width="130" height="38" rx="6" fill="#dd6b20" filter="url(#glow-orange)" opacity="0.9"/>
- <text x="160" y="342" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="ui-monospace,monospace">Exchange</text>
- <text x="160" y="356" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9" font-family="ui-monospace,monospace">hashpartition · 30 pts</text>
- </g>
+                  <!-- Exchange left of join - WARNING -->
+                  <g class="dag-node" data-id="exchange2" onclick="selectNode(this, 'Exchange (Shuffle)', 'warning', 'Shuffle required before sort-merge join. Both sides must be repartitioned on the join key. Adding a broadcast hint on the smaller table eliminates this shuffle entirely.', 30)">
+                    <rect x="95" y="328" width="130" height="38" rx="6" fill="#dd6b20" filter="url(#glow-orange)" opacity="0.9"/>
+                    <text x="160" y="342" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="ui-monospace,monospace">Exchange</text>
+                    <text x="160" y="356" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9" font-family="ui-monospace,monospace">hashpartition · 30 pts</text>
+                  </g>
 
- <!-- SortMergeJoin right - CRITICAL -->
- <g class="dag-node" data-id="smj2" onclick="selectNode(this, 'SortMergeJoin', 'critical', 'Second sort-merge join on product_id. Products table may be small enough to broadcast — try: broadcast(products).', 50)">
- <rect x="335" y="328" width="130" height="38" rx="6" fill="#e53e3e" filter="url(#glow-red)" opacity="0.9"/>
- <text x="400" y="342" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="ui-monospace,monospace">SortMergeJoin</text>
- <text x="400" y="356" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9" font-family="ui-monospace,monospace">⋈ products · 50 pts</text>
- </g>
+                  <!-- SortMergeJoin right - CRITICAL -->
+                  <g class="dag-node" data-id="smj2" onclick="selectNode(this, 'SortMergeJoin', 'critical', 'Second sort-merge join on product_id. Products table may be small enough to broadcast — try: broadcast(products).', 50)">
+                    <rect x="335" y="328" width="130" height="38" rx="6" fill="#e53e3e" filter="url(#glow-red)" opacity="0.9"/>
+                    <text x="400" y="342" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="ui-monospace,monospace">SortMergeJoin</text>
+                    <text x="400" y="356" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9" font-family="ui-monospace,monospace">⋈ products · 50 pts</text>
+                  </g>
 
- <!-- FileScan orders - OK -->
- <g class="dag-node" data-id="scan1" onclick="selectNode(this, 'FileScan (orders)', 'none', 'Delta table scan on orders. No issues detected.', 0)">
- <rect x="20" y="390" width="110" height="24" rx="4" fill="#38a169" opacity="0.85"/>
- <text x="75" y="406" text-anchor="middle" fill="white" font-size="10" font-family="ui-monospace,monospace">FileScan orders</text>
- </g>
+                  <!-- FileScan orders - OK -->
+                  <g class="dag-node" data-id="scan1" onclick="selectNode(this, 'FileScan (orders)', 'none', 'Delta table scan on orders. No issues detected.', 0)">
+                    <rect x="20" y="390" width="110" height="24" rx="4" fill="#38a169" opacity="0.85"/>
+                    <text x="75" y="406" text-anchor="middle" fill="white" font-size="10" font-family="ui-monospace,monospace">FileScan orders</text>
+                  </g>
 
- <!-- FileScan customers - OK -->
- <g class="dag-node" data-id="scan2" onclick="selectNode(this, 'FileScan (customers)', 'none', 'Delta table scan on customers. No issues detected.', 0)">
- <rect x="150" y="390" width="120" height="24" rx="4" fill="#38a169" opacity="0.85"/>
- <text x="210" y="406" text-anchor="middle" fill="white" font-size="10" font-family="ui-monospace,monospace">FileScan customers</text>
- </g>
+                  <!-- FileScan customers - OK -->
+                  <g class="dag-node" data-id="scan2" onclick="selectNode(this, 'FileScan (customers)', 'none', 'Delta table scan on customers. No issues detected.', 0)">
+                    <rect x="150" y="390" width="120" height="24" rx="4" fill="#38a169" opacity="0.85"/>
+                    <text x="210" y="406" text-anchor="middle" fill="white" font-size="10" font-family="ui-monospace,monospace">FileScan customers</text>
+                  </g>
 
- <!-- FileScan products - OK -->
- <g class="dag-node" data-id="scan3" onclick="selectNode(this, 'FileScan (products)', 'none', 'Delta table scan on products. No issues detected.', 0)">
- <rect x="340" y="390" width="110" height="24" rx="4" fill="#38a169" opacity="0.85"/>
- <text x="395" y="406" text-anchor="middle" fill="white" font-size="10" font-family="ui-monospace,monospace">FileScan products</text>
- </g>
- </svg>
- </div>
+                  <!-- FileScan products - OK -->
+                  <g class="dag-node" data-id="scan3" onclick="selectNode(this, 'FileScan (products)', 'none', 'Delta table scan on products. No issues detected.', 0)">
+                    <rect x="340" y="390" width="110" height="24" rx="4" fill="#38a169" opacity="0.85"/>
+                    <text x="395" y="406" text-anchor="middle" fill="white" font-size="10" font-family="ui-monospace,monospace">FileScan products</text>
+                  </g>
+                </svg>
+              </div>
 
- <!-- Tooltip panel -->
- <div class="node-tooltip" id="nodeTooltip">
- <div class="tooltip-placeholder">
- <span> Click any node to see CatalystOps analysis</span>
- </div>
- </div>
+              <!-- Tooltip panel -->
+              <div class="node-tooltip" id="nodeTooltip">
+                <div class="tooltip-placeholder">
+                  <span>🖱 Click any node to see CatalystOps analysis</span>
+                </div>
+              </div>
 
- <!-- Legend -->
- <div class="dag-legend">
- <span class="legend-item"><span class="legend-dot" style="background:#e53e3e"></span>Critical</span>
- <span class="legend-item"><span class="legend-dot" style="background:#dd6b20"></span>Warning</span>
- <span class="legend-item"><span class="legend-dot" style="background:#4299e1"></span>Info</span>
- <span class="legend-item"><span class="legend-dot" style="background:#38a169"></span>OK</span>
- </div>
- </div>
- </div>
-</div>
+              <!-- Legend -->
+              <div class="dag-legend">
+                <span class="legend-item"><span class="legend-dot" style="background:#e53e3e"></span>Critical</span>
+                <span class="legend-item"><span class="legend-dot" style="background:#dd6b20"></span>Warning</span>
+                <span class="legend-item"><span class="legend-dot" style="background:#4299e1"></span>Info</span>
+                <span class="legend-item"><span class="legend-dot" style="background:#38a169"></span>OK</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-<style>
-.viz-section {
- margin: 40px 0;
- border: 1px solid #1E2535;
- border-radius: 12px;
- overflow: hidden;
- background: #0D1117;
-}
-.viz-header {
- padding: 16px 20px;
- border-bottom: 1px solid #1E2535;
- background: #161B27;
-}
-.viz-title {
- display: flex; align-items: center; gap: 8px;
- font-size: 0.9rem; font-weight: 600; color: #F3F4F6;
- margin-bottom: 4px;
-}
-.viz-icon { font-size: 1rem; }
-.viz-subtitle { font-size: 0.75rem; color: #6B7280; }
+        <style>
+        .viz-section {
+          margin: 40px 0;
+          border: 1px solid #1E2535;
+          border-radius: 12px;
+          overflow: hidden;
+          background: #0D1117;
+        }
+        .viz-header {
+          padding: 16px 20px;
+          border-bottom: 1px solid #1E2535;
+          background: #161B27;
+        }
+        .viz-title {
+          display: flex; align-items: center; gap: 8px;
+          font-size: 0.9rem; font-weight: 600; color: #F3F4F6;
+          margin-bottom: 4px;
+        }
+        .viz-icon { font-size: 1rem; }
+        .viz-subtitle { font-size: 0.75rem; color: #6B7280; }
 
-.viz-wrap {
- display: grid;
- grid-template-columns: 1fr 1.4fr;
- min-height: 460px;
-}
-@media (max-width: 700px) {
- .viz-wrap { grid-template-columns: 1fr; }
-}
+        .viz-wrap {
+          display: grid;
+          grid-template-columns: 1fr 1.4fr;
+          min-height: 460px;
+        }
+        @media (max-width: 700px) {
+          .viz-wrap { grid-template-columns: 1fr; }
+        }
 
-/* Code panel */
-.code-panel { border-right: 1px solid #1E2535; display: flex; flex-direction: column; }
-.code-titlebar {
- display: flex; align-items: center; gap: 6px;
- padding: 9px 14px; background: #161B27;
- border-bottom: 1px solid #1E2535;
-}
-.dot { width: 11px; height: 11px; border-radius: 50%; }
-.dot-red { background: #FF5F57; }
-.dot-yellow { background: #FFBD2E; }
-.dot-green { background: #28C840; }
-.code-filename { font-size: 0.75rem; color: #6B7280; margin-left: 6px; font-family: 'JetBrains Mono', monospace; }
-.code-body {
- font-family: 'JetBrains Mono', 'Fira Code', monospace;
- font-size: 0.78rem; line-height: 1.7;
- padding: 18px 18px;
- color: #9CA3AF;
- flex: 1;
- white-space: pre;
- overflow-x: auto;
-}
-.code-body .kw { color: #79C0FF; }
-.code-body .str { color: #A5D6FF; }
-.code-body .fn { color: #D2A8FF; }
-.code-body .cm { color: #484F58; font-style: italic; }
+        /* Code panel */
+        .code-panel { border-right: 1px solid #1E2535; display: flex; flex-direction: column; }
+        .code-filename { font-size: 0.75rem; color: #6B7280; margin-left: 6px; font-family: 'JetBrains Mono', monospace; }
+        .code-body {
+          font-family: 'JetBrains Mono', 'Fira Code', monospace;
+          font-size: 0.78rem; line-height: 1.7;
+          padding: 18px;
+          color: #9CA3AF;
+          flex: 1;
+          white-space: pre;
+          overflow-x: auto;
+        }
+        .code-body .kw { color: #79C0FF; }
+        .code-body .str { color: #A5D6FF; }
+        .code-body .fn { color: #D2A8FF; }
+        .code-body .cm { color: #484F58; font-style: italic; }
 
-/* DAG panel */
-.dag-panel { display: flex; flex-direction: column; }
-.dag-titlebar {
- display: flex; align-items: center; justify-content: space-between;
- padding: 9px 14px; background: #161B27;
- border-bottom: 1px solid #1E2535;
- font-size: 0.75rem; color: #9CA3AF;
- font-family: 'JetBrains Mono', monospace;
-}
-.dag-badge {
- background: rgba(229,62,62,0.15);
- border: 1px solid rgba(229,62,62,0.3);
- color: #FC8181; border-radius: 999px;
- padding: 2px 10px; font-size: 0.7rem;
-}
-.dag-canvas { flex: 1; padding: 8px; cursor: default; }
-.dag-node { cursor: pointer; }
-.dag-node rect { transition: opacity 0.15s, filter 0.15s; }
-.dag-node:hover rect { opacity: 1 !important; }
-.dag-node.selected rect { stroke: #fff; stroke-width: 2; }
+        /* DAG panel */
+        .dag-panel { display: flex; flex-direction: column; }
+        .dag-titlebar {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 9px 14px; background: #161B27;
+          border-bottom: 1px solid #1E2535;
+          font-size: 0.75rem; color: #9CA3AF;
+          font-family: 'JetBrains Mono', monospace;
+        }
+        .dag-badge {
+          background: rgba(229,62,62,0.15);
+          border: 1px solid rgba(229,62,62,0.3);
+          color: #FC8181; border-radius: 999px;
+          padding: 2px 10px; font-size: 0.7rem;
+        }
+        .dag-canvas { flex: 1; padding: 8px; cursor: default; }
+        .dag-node { cursor: pointer; }
+        .dag-node rect { transition: opacity 0.15s, filter 0.15s; }
+        .dag-node:hover rect { opacity: 1 !important; }
+        .dag-node.selected rect { stroke: #fff; stroke-width: 2; }
 
-/* Tooltip */
-.node-tooltip {
- border-top: 1px solid #1E2535;
- padding: 12px 16px;
- min-height: 72px;
- background: #0D1117;
- font-size: 0.8rem;
-}
-.tooltip-placeholder { color: #4A5568; font-style: italic; display: flex; align-items: center; height: 48px; }
-.tooltip-inner { display: none; }
-.tooltip-inner.visible { display: block; }
-.tooltip-name { font-weight: 700; margin-bottom: 4px; }
-.tooltip-name.critical { color: #FC8181; }
-.tooltip-name.warning { color: #F6AD55; }
-.tooltip-name.info { color: #63B3ED; }
-.tooltip-name.none { color: #68D391; }
-.tooltip-desc { color: #9CA3AF; line-height: 1.55; }
-.tooltip-fix {
- margin-top: 8px;
- padding: 8px 12px;
- background: rgba(249,115,22,0.08);
- border-left: 2px solid #F97316;
- border-radius: 0 4px 4px 0;
- font-size: 0.75rem; color: #9CA3AF;
-}
-.tooltip-fix strong { color: #F97316; }
-.tooltip-pts {
- display: inline-block; margin-top: 6px;
- background: rgba(229,62,62,0.1); border: 1px solid rgba(229,62,62,0.2);
- border-radius: 4px; padding: 1px 8px;
- font-size: 0.72rem; color: #FC8181;
- font-family: 'JetBrains Mono', monospace;
-}
+        /* Tooltip */
+        .node-tooltip {
+          border-top: 1px solid #1E2535;
+          padding: 12px 16px;
+          min-height: 72px;
+          background: #0D1117;
+          font-size: 0.8rem;
+        }
+        .tooltip-placeholder { color: #4A5568; font-style: italic; display: flex; align-items: center; height: 48px; }
+        .tooltip-inner { display: none; }
+        .tooltip-inner.visible { display: block; }
+        .tooltip-name { font-weight: 700; margin-bottom: 4px; }
+        .tooltip-name.critical { color: #FC8181; }
+        .tooltip-name.warning { color: #F6AD55; }
+        .tooltip-name.info { color: #63B3ED; }
+        .tooltip-name.none { color: #68D391; }
+        .tooltip-desc { color: #9CA3AF; line-height: 1.55; }
+        .tooltip-fix {
+          margin-top: 8px;
+          padding: 8px 12px;
+          background: rgba(249,115,22,0.08);
+          border-left: 2px solid #F97316;
+          border-radius: 0 4px 4px 0;
+          font-size: 0.75rem; color: #9CA3AF;
+        }
+        .tooltip-fix strong { color: #F97316; }
+        .tooltip-pts {
+          display: inline-block; margin-top: 6px;
+          background: rgba(229,62,62,0.1); border: 1px solid rgba(229,62,62,0.2);
+          border-radius: 4px; padding: 1px 8px;
+          font-size: 0.72rem; color: #FC8181;
+          font-family: 'JetBrains Mono', monospace;
+        }
 
-/* Legend */
-.dag-legend {
- display: flex; gap: 16px; padding: 8px 14px;
- border-top: 1px solid #1E2535;
- background: #161B27;
-}
-.legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.72rem; color: #6B7280; }
-.legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
-</style>
+        /* Legend */
+        .dag-legend {
+          display: flex; gap: 16px; padding: 8px 14px;
+          border-top: 1px solid #1E2535;
+          background: #161B27;
+        }
+        .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.72rem; color: #6B7280; }
+        .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+        </style>
 
-<script>
-const FIXES = {
- 'SortMergeJoin': 'Quick fix: Add <code>broadcast()</code> hint on the smaller table, or increase <code>spark.sql.autoBroadcastJoinThreshold</code>.',
- 'Exchange (Shuffle)': 'Quick fix: Repartition earlier in the pipeline on the groupBy/join key to avoid redundant shuffle.',
- 'HashAggregate': null,
- 'FileScan (orders)': null,
- 'FileScan (customers)': null,
- 'FileScan (products)': null,
-};
+        <script>
+        const FIXES = {
+          'SortMergeJoin': 'Quick fix: Add <code>broadcast()</code> hint on the smaller table, or increase <code>spark.sql.autoBroadcastJoinThreshold</code>.',
+          'Exchange (Shuffle)': 'Quick fix: Repartition earlier in the pipeline on the groupBy/join key to avoid redundant shuffle.',
+          'HashAggregate': null,
+          'FileScan (orders)': null,
+          'FileScan (customers)': null,
+          'FileScan (products)': null,
+        };
 
-let selectedNode = null;
+        let selectedNode = null;
 
-function selectNode(el, name, severity, desc, pts) {
- if (selectedNode) selectedNode.classList.remove('selected');
- el.classList.add('selected');
- selectedNode = el;
+        function selectNode(el, name, severity, desc, pts) {
+          if (selectedNode) selectedNode.classList.remove('selected');
+          el.classList.add('selected');
+          selectedNode = el;
 
- const tooltip = document.getElementById('nodeTooltip');
- const fix = FIXES[name];
- tooltip.innerHTML = '<div class="tooltip-inner visible">' +
- '<div class="tooltip-name ' + severity + '">' + name + (pts > 0 ? '' : ' ') + '</div>' +
- '<div class="tooltip-desc">' + desc + '</div>' +
- (fix ? '<div class="tooltip-fix"><strong> CatalystOps suggests:</strong> ' + fix + '</div>' : '') +
- (pts > 0 ? '<span class="tooltip-pts">cost: ' + pts + ' pts</span>' : '') +
- '</div>';
-}
-</script>
+          const tooltip = document.getElementById('nodeTooltip');
+          const fix = FIXES[name];
+          tooltip.innerHTML = '<div class="tooltip-inner visible">' +
+            '<div class="tooltip-name ' + severity + '">' + name + (pts > 0 ? '' : ' ✓') + '</div>' +
+            '<div class="tooltip-desc">' + desc + '</div>' +
+            (fix ? '<div class="tooltip-fix"><strong>⚡ CatalystOps suggests:</strong> ' + fix + '</div>' : '') +
+            (pts > 0 ? '<span class="tooltip-pts">cost: ' + pts + ' pts</span>' : '') +
+            '</div>';
+        }
+        </script>
 
+        <h3>⚡ Context-Aware Quick Fixes</h3>
+        <p>CatalystOps doesn't just show you the problem — it offers <strong>one-click fixes</strong> directly on plan tree nodes. These aren't generic suggestions; they're generated from the actual plan for your specific query:</p>
 
- <h3> Context-Aware Quick Fixes</h3>
- <p>CatalystOps doesn't just show you the problem — it offers <strong>one-click fixes</strong> directly on plan tree nodes. These aren't generic suggestions; they're generated from the actual plan for your specific query:</p>
+        <table>
+          <thead><tr><th>Problem detected</th><th>Quick fix offered</th></tr></thead>
+          <tbody>
+            <tr><td>Inefficient join (missing broadcast)</td><td>Add broadcast hint</td></tr>
+            <tr><td>Unnecessary exchange / shuffle</td><td>Add repartition hint</td></tr>
+            <tr><td>Repeated scan without caching</td><td>Add <code>.persist()</code></td></tr>
+            <tr><td>Sort-merge join with AQE disabled</td><td>Set AQE config</td></tr>
+            <tr><td>Cartesian product</td><td>Add join condition hint</td></tr>
+          </tbody>
+        </table>
 
- <table>
- <thead><tr><th>Problem detected</th><th>Quick fix offered</th></tr></thead>
- <tbody>
- <tr><td>Inefficient join (missing broadcast)</td><td>Add broadcast hint</td></tr>
- <tr><td>Unnecessary exchange / shuffle</td><td>Add repartition hint</td></tr>
- <tr><td>Repeated scan without caching</td><td>Add <code>.persist()</code></td></tr>
- <tr><td>Sort-merge join with AQE disabled</td><td>Set AQE config</td></tr>
- <tr><td>Cartesian product</td><td>Add join condition hint</td></tr>
- </tbody>
- </table>
+        <h3>⏱ Configurable Dry-Run Timeout</h3>
+        <p>Set your own timeout via <code>catalystops.dryRun.timeoutSeconds</code> (default: 300s, minimum: 30s). No more jobs silently timing out mid-analysis on large plans.</p>
 
- <h3>⏱ Configurable Dry-Run Timeout</h3>
- <p>Set your own timeout via <code>catalystops.dryRun.timeoutSeconds</code> (default: 300s, minimum: 30s). No more jobs silently timing out mid-analysis on large plans.</p>
+        <h2>Why This Matters</h2>
+        <p>Most PySpark performance issues fall into a handful of categories: bad joins, unnecessary shuffles, repeated scans, missing statistics. They're common, they're expensive, and they're fixable — if you can spot them.</p>
+        <p>The problem has always been visibility. The Spark physical plan contains everything you need, but it's buried in a UI most developers don't open until something is already on fire. CatalystOps 0.8.0 brings that visibility into your editor, <strong>before you ship to production</strong>, with the fixes already written for you.</p>
 
- <h2>Why This Matters</h2>
- <p>Most PySpark performance issues fall into a handful of categories: bad joins, unnecessary shuffles, repeated scans, missing statistics. They're common, they're expensive, and they're fixable — if you can spot them.</p>
- <p>The problem has always been visibility. The Spark physical plan contains everything you need, but it's buried in a UI most developers don't open until something is already on fire. CatalystOps 0.8.0 brings that visibility into your editor, <strong>before you ship to production</strong>, with the fixes already written for you.</p>
+        <div class="callout not-prose">
+          <div class="callout-label">🔥 Pro tip</div>
+          <p class="text-sm text-gray-400 leading-relaxed">After your first dry run, open the Plan DAG alongside the plan tree — the graph view makes multi-stage shuffle chains immediately obvious at a glance.</p>
+        </div>
 
- <div class="callout">
- <div class="callout-label"> Pro tip</div>
- <p>After your first dry run, open the Plan DAG alongside the plan tree — the graph view makes multi-stage shuffle chains immediately obvious at a glance.</p>
- </div>
+        <h2>Getting Started</h2>
+        <ol>
+          <li>Install CatalystOps from the <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank">VS Code Marketplace</a> or <a href="https://open-vsx.org/extension/CatalystOps/catalystops" target="_blank">Open VSX</a></li>
+          <li>Connect your Databricks workspace in the extension settings</li>
+          <li>Open a PySpark file and run a dry run (<code>CatalystOps: Run Dry Run</code>)</li>
+          <li>Open the <strong>Explain Plan</strong> panel in the sidebar</li>
+          <li>Click any node to see cost details and available quick fixes</li>
+          <li>Open the DAG view — <code>CatalystOps: Show Plan DAG</code></li>
+        </ol>
 
- <h2>Getting Started</h2>
- <ol>
- <li>Install CatalystOps from the <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank">VS Code Marketplace</a> or <a href="https://open-vsx.org/extension/CatalystOps/catalystops" target="_blank">Open VSX</a></li>
- <li>Connect your Databricks workspace in the extension settings</li>
- <li>Open a PySpark file and run a dry run (<code>CatalystOps: Run Dry Run</code>)</li>
- <li>Open the <strong>Explain Plan</strong> panel in the sidebar</li>
- <li>Click any node to see cost details and available quick fixes</li>
- <li>Open the DAG view — <code>CatalystOps: Show Plan DAG</code></li>
- </ol>
+        <h2>What's Next</h2>
+        <p>0.8.0 lays the groundwork for deeper plan analysis. On the roadmap: multi-file plan correlation, historical plan comparison, and cost trend tracking across runs.</p>
+        <p>Got feedback? Open an issue on <a href="https://github.com/lezwon/CatalystOps" target="_blank">GitHub</a> or drop a review on the <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank">VS Code Marketplace</a>.</p>
 
- <h2>What's Next</h2>
- <p>0.8.0 lays the groundwork for deeper plan analysis. On the roadmap: multi-file plan correlation, historical plan comparison, and cost trend tracking across runs.</p>
- <p>Got feedback? Open an issue on <a href="https://github.com/lezwon/CatalystOps" target="_blank">GitHub</a> or drop a review on the <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank">VS Code Marketplace</a>.</p>
+        <hr />
 
- <hr />
+        <!-- CTA -->
+        <div class="not-prose bg-card border border-border rounded-xl p-10 text-center">
+          <p class="text-xs text-muted mb-2">Free &amp; open source</p>
+          <h3 class="text-xl font-bold text-white mb-3">Try CatalystOps today</h3>
+          <p class="text-sm text-gray-400 mb-6">Catch PySpark performance issues before they hit production — inline, in your editor.</p>
+          <div class="flex gap-3 justify-center flex-wrap">
+            <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" class="btn-primary" target="_blank" style="min-width:260px;text-align:center">Install for VS Code</a>
+            <a href="https://github.com/lezwon/CatalystOps" class="btn-secondary" target="_blank" style="min-width:260px;text-align:center">View on GitHub</a>
+          </div>
+        </div>
 
- <div class="cta-box">
- <p class="eyebrow">Free &amp; open source</p>
- <h3>Try CatalystOps today</h3>
- <p>Catch PySpark performance issues before they hit production — inline, in your editor.</p>
- <div class="cta-buttons">
- <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" class="btn-primary" target="_blank">Install for VS Code</a>
- <a href="https://github.com/lezwon/CatalystOps" class="btn-secondary" target="_blank">View on GitHub</a>
- </div>
- </div>
+      </article>
+    </div>
+  </div>
 
- </article>
- </div>
- </div>
-
- <footer>
- <div class="footer-inner">
- <div class="footer-left">
- <img src="/icon.png" alt="" />
- <span>© 2026 SpendOps. All rights reserved.</span>
- </div>
- <div class="footer-right">
- <a href="https://github.com/lezwon/CatalystOps" target="_blank">GitHub</a>
- <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank">Marketplace</a>
- <a href="/blog/">Blog</a>
- </div>
- </div>
- </footer>
+  <!-- Footer -->
+  <footer class="border-t border-border py-7">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col items-center gap-3 text-sm text-muted sm:flex-row sm:justify-between">
+      <div class="flex items-center gap-2">
+        <img src="/icon.png" alt="" class="w-4 h-4 opacity-40" />
+        <span>© 2026 SpendOps. All rights reserved.</span>
+      </div>
+      <div class="flex gap-6">
+        <a href="https://github.com/lezwon/CatalystOps" target="_blank" class="hover:text-white transition-colors">GitHub</a>
+        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank" class="hover:text-white transition-colors">Marketplace</a>
+        <a href="/blog/" class="hover:text-white transition-colors">Blog</a>
+      </div>
+    </div>
+  </footer>
 
 </body>
 </html>

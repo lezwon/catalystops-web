@@ -30,10 +30,9 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/theme.css" />
 
   <style>
-    body { background-color: #0F1117; }
-
     /* Gradient glow behind hero */
     .hero-glow {
       position: absolute;
@@ -42,32 +41,6 @@
       top: -80px; left: 50%; transform: translateX(-50%);
       pointer-events: none;
     }
-
-    /* Animated underline on nav links */
-    .nav-link { position: relative; }
-    .nav-link::after {
-      content: ''; position: absolute; bottom: -2px; left: 0;
-      width: 0; height: 1.5px; background: #F97316;
-      transition: width 0.25s ease;
-    }
-    .nav-link:hover::after { width: 100%; }
-
-    /* Code window */
-    .code-window {
-      background: #0D1117;
-      border: 1px solid #1E2535;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .code-titlebar {
-      background: #161B27;
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      border-bottom: 1px solid #1E2535;
-    }
-    .dot { width: 12px; height: 12px; border-radius: 50%; }
 
     /* Squiggle underline on highlighted code */
     .squiggle {
@@ -97,49 +70,6 @@
     /* Step connector */
     .step-line { background: linear-gradient(to bottom, #F97316, transparent); }
 
-    /* Badge pill */
-    .badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(249,115,22,0.1);
-      border: 1px solid rgba(249,115,22,0.25);
-      border-radius: 999px;
-      padding: 4px 14px;
-      font-size: 0.78rem;
-      font-weight: 500;
-      color: #F97316;
-    }
-
-    /* Gradient text */
-    .gradient-text {
-      background: linear-gradient(135deg, #fff 30%, #F97316 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    /* Install button shimmer */
-    .btn-primary {
-      position: relative; overflow: hidden;
-      background: #F97316; color: #fff;
-      font-weight: 600; border-radius: 8px;
-      padding: 13px 28px; font-size: 1rem;
-      transition: background 0.2s, box-shadow 0.2s;
-      white-space: nowrap;
-    }
-    .btn-primary:hover {
-      background: #EA580C;
-      box-shadow: 0 0 28px rgba(249,115,22,0.35);
-    }
-    .btn-secondary {
-      background: transparent;
-      border: 1px solid #1E2535;
-      color: #D1D5DB;
-      font-weight: 500; border-radius: 8px;
-      padding: 13px 28px; font-size: 1rem;
-      transition: border-color 0.2s, color 0.2s;
-    }
-    .btn-secondary:hover { border-color: #F97316; color: #fff; }
-
     /* Diagnostic tooltip */
     .diag-tooltip {
       background: #1C2333;
@@ -154,11 +84,6 @@
       color: #F97316; font-weight: 600; font-size: 0.75rem;
     }
 
-    /* Mobile nav */
-    @media (max-width: 640px) {
-      .btn-primary { font-size: 0.75rem !important; padding: 6px 12px !important; }
-
-    }
   </style>
 </head>
 <body class="text-gray-100 font-sans antialiased">
@@ -182,7 +107,7 @@
       </div>
       <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
          target="_blank"
-         class="btn-primary text-sm px-5 py-2.5">
+         class="btn-nav">
         Install Free
       </a>
     </div>
@@ -211,10 +136,10 @@
 
       <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
         <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
-           target="_blank" class="btn-primary w-full sm:w-auto text-center">
-          Install from VS Code Marketplace
+           target="_blank" class="btn-primary" style="min-width:260px;text-align:center">
+          Install for VS Code
         </a>
-        <a href="https://github.com/lezwon/CatalystOps" target="_blank" class="btn-secondary w-full sm:w-auto text-center">
+        <a href="https://github.com/lezwon/CatalystOps" target="_blank" class="btn-secondary" style="min-width:260px;text-align:center">
           View on GitHub
         </a>
       </div>
@@ -620,11 +545,11 @@
       </p>
       <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
         <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
-           target="_blank" class="btn-primary text-base text-center" style="min-width:260px">
-          Install from VS Code Marketplace
+           target="_blank" class="btn-primary" style="min-width:260px;text-align:center">
+          Install for VS Code
         </a>
         <a href="https://open-vsx.org/extension/CatalystOps/catalystops"
-           target="_blank" class="btn-secondary text-base text-center" style="min-width:260px">
+           target="_blank" class="btn-secondary" style="min-width:260px;text-align:center">
           Open VSX Registry
         </a>
       </div>
