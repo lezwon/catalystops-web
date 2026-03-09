@@ -245,25 +245,33 @@
 <body class="font-sans antialiased">
 
   <!-- Nav -->
-  <nav class="sticky top-0 z-50 border-b border-[#1E2535] bg-[#0F1117]/90 backdrop-blur-md">
-    <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-      <a href="/" class="flex items-center gap-2">
-        <img src="/icon.png" alt="CatalystOps" class="w-7 h-7" />
-        <span class="font-bold text-white text-base">CatalystOps</span>
-        <span class="text-[#6B7280] text-sm hidden sm:inline">· SpendOps</span>
-      </a>
-      <div class="flex items-center gap-6 text-sm text-[#9CA3AF]">
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-[#1E2535] bg-[#0F1117]/80 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <a href="/" class="flex items-center gap-2.5">
+          <img src="/icon.png" alt="CatalystOps" class="w-7 h-7" />
+          <span class="font-bold text-lg tracking-tight text-white">CatalystOps</span>
+        </a>
+        <span class="text-xs text-[#6B7280] font-normal whitespace-nowrap">by&nbsp;<a href="/" class="hover:text-white transition-colors">SpendOps</a></span>
+      </div>
+      <div class="hidden md:flex items-center gap-8 text-sm text-[#9CA3AF]">
         <a href="/#features" class="nav-link hover:text-white transition-colors">Features</a>
         <a href="/#how-it-works" class="nav-link hover:text-white transition-colors">How it works</a>
+        <a href="/#rules" class="nav-link hover:text-white transition-colors">Rules</a>
+        <a href="/#mcp" class="nav-link hover:text-white transition-colors">MCP</a>
         <a href="/blog/" class="nav-link hover:text-white transition-colors text-[#F97316]">Blog</a>
-        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
-           class="btn-primary !py-2 !px-4 !text-sm" target="_blank">Install Free</a>
       </div>
+      <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
+         target="_blank"
+         class="btn-primary text-sm px-5 py-2.5">
+        Install Free
+      </a>
     </div>
   </nav>
 
+
   <!-- Hero -->
-  <header class="max-w-3xl mx-auto px-6 pt-16 pb-10">
+  <header class="max-w-3xl mx-auto px-6 pt-24 pb-10">
     <div class="mb-4 flex items-center gap-3">
       <span class="badge">Release Notes</span>
       <span class="text-[#6B7280] text-sm">March 9, 2026</span>
