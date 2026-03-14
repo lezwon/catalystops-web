@@ -1,52 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-surface">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CatalystOps Now Has an MCP Server — AI-Assisted PySpark Optimization | CatalystOps Blog</title>
-  <meta name="description" content="CatalystOps exposes a local MCP server so Claude, GitHub Copilot, and Cursor can read your Spark analysis results, trigger dry runs, and query your Databricks billing — all without leaving your editor." />
+  <title>CatalystOps MCP Server — AI-Assisted PySpark Optimization · SpendOps Blog</title>
+  <meta name="description" content="CatalystOps 0.8.2 ships a built-in MCP server. Claude, GitHub Copilot, and Cursor can now read your live Spark analysis, trigger dry runs, and query Databricks billing directly." />
   <link rel="canonical" href="https://spendops.dev/blog/catalystops-mcp-server-ai-pyspark/" />
 
   <!-- Open Graph -->
-  <meta property="og:title" content="CatalystOps Now Has an MCP Server — AI-Assisted PySpark Optimization" />
-  <meta property="og:description" content="CatalystOps exposes a local MCP server so Claude, GitHub Copilot, and Cursor can read your Spark analysis results, trigger dry runs, and query your Databricks billing — all without leaving your editor." />
-  <meta property="og:url" content="https://spendops.dev/blog/catalystops-mcp-server-ai-pyspark/" />
   <meta property="og:type" content="article" />
-  <meta property="og:site_name" content="CatalystOps" />
+  <meta property="og:title" content="CatalystOps MCP Server — AI-Assisted PySpark Optimization · SpendOps Blog" />
+  <meta property="og:description" content="CatalystOps 0.8.2 ships a built-in MCP server. Claude, GitHub Copilot, and Cursor can now read your live Spark analysis, trigger dry runs, and query Databricks billing directly." />
+  <meta property="og:url" content="https://spendops.dev/blog/catalystops-mcp-server-ai-pyspark/" />
+  <meta property="og:site_name" content="SpendOps Blog" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="CatalystOps Now Has an MCP Server — AI-Assisted PySpark Optimization" />
-  <meta name="twitter:description" content="CatalystOps exposes a local MCP server so Claude, GitHub Copilot, and Cursor can read your Spark analysis results and trigger dry runs." />
+  <meta name="twitter:title" content="CatalystOps MCP Server — AI-Assisted PySpark Optimization" />
+  <meta name="twitter:description" content="CatalystOps 0.8.2 ships a built-in MCP server. Claude, GitHub Copilot, and Cursor can now read your live Spark analysis, trigger dry runs, and query Databricks billing directly." />
 
-  <!-- JSON-LD -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    "headline": "CatalystOps Now Has an MCP Server — AI-Assisted PySpark Optimization",
-    "description": "CatalystOps exposes a local MCP server so Claude, GitHub Copilot, and Cursor can read your Spark analysis results, trigger dry runs, and query your Databricks billing.",
-    "url": "https://spendops.dev/blog/catalystops-mcp-server-ai-pyspark/",
-    "datePublished": "2026-03-13",
-    "author": { "@type": "Organization", "name": "CatalystOps" },
-    "publisher": { "@type": "Organization", "name": "CatalystOps", "url": "https://spendops.dev" }
-  }
-  </script>
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/icon.png" />
 
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            background: '#0f1117',
-            surface: '#161b27',
-            border: '#1e2738',
-            primary: '#4f8ef7',
-            'primary-dark': '#3a6fd8',
-            muted: '#8892a4',
-            heading: '#e8eaf0',
-            body: '#c5cad6',
+            brand: '#F97316',
+            'brand-dim': '#EA580C',
+            surface: '#0F1117',
+            card: '#161B27',
+            border: '#1E2535',
+            muted: '#6B7280',
           },
           fontFamily: {
             sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -56,242 +49,299 @@
       },
     }
   </script>
-  <style>
-    body { background: #0f1117; color: #c5cad6; }
-    .prose h2 { color: #e8eaf0; font-size: 1.5rem; font-weight: 700; margin: 2.5rem 0 1rem; }
-    .prose h3 { color: #e8eaf0; font-size: 1.15rem; font-weight: 600; margin: 2rem 0 0.75rem; }
-    .prose p { margin: 1rem 0; line-height: 1.8; }
-    .prose ul { margin: 1rem 0 1rem 1.5rem; list-style: disc; }
-    .prose ol { margin: 1rem 0 1rem 1.5rem; list-style: decimal; }
-    .prose li { margin: 0.4rem 0; line-height: 1.7; }
-    .prose a { color: #4f8ef7; text-decoration: underline; }
-    .prose strong { color: #e8eaf0; font-weight: 600; }
-    .prose code { background: #1e2738; color: #a8d8a8; padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.875em; font-family: 'JetBrains Mono', monospace; }
-    .prose pre { background: #1a1f2e; border: 1px solid #1e2738; border-radius: 8px; padding: 1.25rem 1.5rem; overflow-x: auto; margin: 1.5rem 0; }
-    .prose pre code { background: transparent; padding: 0; color: #c5cad6; font-size: 0.875rem; line-height: 1.7; }
-    .prose blockquote { border-left: 3px solid #4f8ef7; padding-left: 1.25rem; margin: 1.5rem 0; color: #8892a4; font-style: italic; }
-    .tag { display: inline-block; background: #1e2738; color: #4f8ef7; font-size: 0.75rem; font-weight: 500; padding: 0.2rem 0.65rem; border-radius: 9999px; }
-    .tool-card { background: #161b27; border: 1px solid #1e2738; border-radius: 10px; padding: 1rem 1.25rem; margin: 0.75rem 0; }
-    .tool-card .tool-name { font-family: 'JetBrains Mono', monospace; color: #4f8ef7; font-size: 0.9rem; font-weight: 600; }
-    .tool-card .tool-desc { color: #8892a4; font-size: 0.875rem; margin-top: 0.3rem; }
-    nav { transform: translateZ(0); background: rgba(15,17,23,0.85); }
-  </style>
+
+  <!-- Theme CSS -->
+  <link rel="stylesheet" href="/css/theme.css" />
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "CatalystOps Now Has an MCP Server. AI-Assisted PySpark Optimization.",
+    "description": "CatalystOps 0.8.2 ships a built-in MCP server. Claude, GitHub Copilot, and Cursor can now read your live Spark analysis, trigger dry runs, and query Databricks billing directly.",
+    "datePublished": "2026-03-13",
+    "author": {
+      "@type": "Organization",
+      "name": "SpendOps"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "SpendOps",
+      "url": "https://spendops.dev"
+    },
+    "url": "https://spendops.dev/blog/catalystops-mcp-server-ai-pyspark/"
+  }
+  </script>
 </head>
-<body class="font-sans antialiased">
+<body class="text-gray-100 font-sans antialiased">
 
   <!-- Nav -->
-  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-border backdrop-blur-md" style="background:rgba(15,17,23,0.85)">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
-        <a href="/" class="flex items-center gap-2.5 text-heading font-semibold text-lg hover:text-primary transition-colors">
-          <img src="/media/icon.png" alt="CatalystOps" class="w-7 h-7 rounded" onerror="this.style.display='none'" />
-          CatalystOps
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-border bg-surface/80 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <a href="/" class="flex items-center gap-2.5">
+          <img src="/icon.png" alt="CatalystOps" class="w-7 h-7" />
+          <span class="font-bold text-lg tracking-tight">CatalystOps</span>
         </a>
-        <div class="hidden md:flex items-center gap-6 text-sm text-muted">
-          <a href="/#features" class="hover:text-heading transition-colors">Features</a>
-          <a href="/#pricing" class="hover:text-heading transition-colors">Pricing</a>
-          <a href="/blog/" class="hover:text-heading transition-colors text-heading">Blog</a>
-          <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
-             class="bg-primary hover:bg-primary-dark text-white text-sm font-medium px-4 py-1.5 rounded-lg transition-colors"
-             target="_blank" rel="noopener">Install Free</a>
-        </div>
-        <button class="md:hidden p-2 rounded-lg text-muted hover:text-heading hover:bg-surface transition-colors" aria-label="Toggle menu">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+        <span class="text-xs text-muted font-normal whitespace-nowrap">by&nbsp;<a href="/" class="hover:text-white transition-colors">SpendOps</a></span>
       </div>
+      <div class="hidden md:flex items-center gap-8 text-sm text-gray-400">
+        <a href="/#features" class="nav-link hover:text-white transition-colors">Features</a>
+        <a href="/#how-it-works" class="nav-link hover:text-white transition-colors">How it works</a>
+        <a href="/#rules" class="nav-link hover:text-white transition-colors">Rules</a>
+        <a href="/#mcp" class="nav-link hover:text-white transition-colors">MCP</a>
+        <a href="/blog/" class="nav-link text-brand">Blog</a>
+      </div>
+      <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank" class="btn-nav">Install Free</a>
     </div>
   </nav>
 
-  <!-- Hero -->
-  <div class="pt-24 pb-8 px-4">
-    <div class="max-w-2xl mx-auto">
-      <div class="flex flex-wrap gap-2 mb-5">
-        <span class="tag">MCP</span>
-        <span class="tag">AI Integration</span>
-        <span class="tag">PySpark</span>
-        <span class="tag">v0.8.2</span>
+  <!-- Page -->
+  <div class="pt-16">
+    <div class="max-w-[700px] mx-auto px-6">
+
+      <!-- Breadcrumb -->
+      <div class="flex items-center gap-2 text-xs text-muted pt-6">
+        <a href="/" class="hover:text-brand transition-colors">Home</a>
+        <span class="text-border">›</span>
+        <a href="/blog/" class="hover:text-brand transition-colors">Blog</a>
+        <span class="text-border">›</span>
+        <span class="text-gray-400">MCP Server</span>
       </div>
-      <h1 class="text-3xl sm:text-4xl font-bold text-heading leading-tight mb-4">
-        CatalystOps Now Has an MCP Server — AI-Assisted PySpark Optimization
-      </h1>
-      <p class="text-muted text-sm mb-6">March 13, 2026 &nbsp;·&nbsp; 6 min read</p>
-      <p class="text-body text-lg leading-relaxed">
-        CatalystOps 0.8.2 ships a built-in MCP (Model Context Protocol) server. Claude, GitHub Copilot, Cursor, and any other MCP-compatible AI assistant can now read your live Spark analysis results, trigger dry runs against your Databricks cluster, and pull billing data — all from inside your editor, without copy-pasting a single line.
-      </p>
+
+      <!-- Article header -->
+      <header class="pt-5 pb-10 border-b border-border mb-12">
+        <div class="flex items-center gap-3 mb-5 flex-wrap">
+          <span class="badge">AI Integration</span>
+          <span class="text-xs text-muted">March 13, 2026</span>
+          <span class="text-xs text-muted font-mono bg-card border border-border rounded px-2 py-0.5">v0.8.2</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold leading-tight mb-5">
+          <span class="gradient-text">CatalystOps Now Has an MCP Server.</span><br/>
+          AI-Assisted PySpark Optimization.
+        </h1>
+        <p class="text-lg text-gray-400 leading-relaxed">CatalystOps 0.8.2 ships a built-in MCP server that gives Claude, GitHub Copilot, Cursor, and other AI assistants direct access to your live Spark analysis — static issues, Databricks physical plans, and billing data — so they can give you grounded, specific advice instead of generic tips.</p>
+      </header>
+
+      <article class="prose pb-24">
+
+        <h2>What is MCP?</h2>
+
+        <p>Model Context Protocol (MCP) is an open standard created by Anthropic for connecting AI assistants to external tools and data sources. Instead of copy-pasting error messages or code snippets into a chat window, MCP lets the AI call tools directly — reading live data, triggering actions, and returning structured results.</p>
+
+        <p>MCP is now supported by Claude (Desktop and Claude.ai), GitHub Copilot in VS Code 1.99+, Cursor, Windsurf, and Kiro. Any of these can connect to the CatalystOps MCP server and access your Spark analysis in real time.</p>
+
+        <h2>What the CatalystOps MCP Server Exposes</h2>
+
+        <p>The server exposes three categories of capabilities: tools (actions), resources (live data), and prompts (structured workflows).</p>
+
+        <h3>Tools</h3>
+
+        <p>Tools are callable actions the AI can invoke during a conversation:</p>
+
+        <ul>
+          <li><code>analyze_pyspark</code> — Run local static analysis on any PySpark snippet. No Databricks connection needed. Pass any code string and get back structured issues immediately.</li>
+          <li><code>get_active_file_issues</code> — Returns the current file's issues as structured JSON. The AI sees exactly what CatalystOps sees in your editor right now.</li>
+          <li><code>run_dry_run</code> — Triggers a full Databricks dry run for the active file, waits up to 5 minutes, and returns the physical plan plus any plan-level issues detected.</li>
+          <li><code>get_plan_analysis</code> — Returns the last dry run results without triggering a new one. Useful for follow-up questions about a plan you already ran.</li>
+          <li><code>get_billing_summary</code> — Returns Databricks spend: total dollars, DBUs, and breakdown by user, job, and workload type. Accepts a period parameter: <code>day</code>, <code>week</code>, or <code>month</code>.</li>
+          <li><code>refresh_billing</code> — Forces a live billing fetch, bypassing the cache. Use this when you want current numbers rather than the last cached snapshot.</li>
+        </ul>
+
+        <h3>Resources</h3>
+
+        <p>Resources are live data endpoints the AI can read at any time:</p>
+
+        <ul>
+          <li><code>catalystops://issues/current</code> — Live Markdown issue list for the active file, formatted for readability in AI context.</li>
+          <li><code>catalystops://plans/last</code> — Raw physical and logical plan text from the last dry run.</li>
+          <li><code>catalystops://billing/summary</code> — Formatted billing snapshot, ready to inject into a conversation.</li>
+        </ul>
+
+        <h3>Prompts</h3>
+
+        <p>Prompts are pre-built workflows that combine tool calls with structured AI instructions:</p>
+
+        <ul>
+          <li><code>pyspark_code_review</code> — Injects CatalystOps findings as context, then asks the AI for a holistic code review grounded in real issues rather than style preferences.</li>
+          <li><code>optimize_spark_plan</code> — Injects the raw Catalyst plan (logical + physical), then asks the AI to identify optimization opportunities based on the actual execution plan.</li>
+        </ul>
+
+        <h2>A Real Example</h2>
+
+        <p>Here's what a conversation looks like when Claude has access to the MCP server. The user has a PySpark ETL file open in VS Code.</p>
+
+        <div class="code-window my-6 not-prose">
+          <div class="code-titlebar">
+            <span class="dot bg-[#FF5F57]"></span>
+            <span class="dot bg-[#FFBD2E]"></span>
+            <span class="dot bg-[#28C840]"></span>
+            <span class="text-xs text-muted ml-2 font-mono">Claude conversation</span>
+          </div>
+          <pre class="text-xs font-mono leading-relaxed p-5 overflow-x-auto text-gray-300"><span class="text-gray-500">User:</span> Review my PySpark ETL and tell me what will be expensive at scale.
+
+<span class="text-gray-500">Claude:</span> Let me check your current file for issues first.
+<span class="text-brand">→ Calling get_active_file_issues</span>
+
+Found 3 issues: cartesian product in join on line 42, window
+function missing partitionBy on line 67, repeated DataFrame
+scan of "events" table (used 4 times without caching).
+
+Let me also get the physical plan to confirm what Spark will
+actually execute.
+<span class="text-brand">→ Calling run_dry_run</span>
+<span class="text-gray-500">  (waiting for Databricks dry run...)</span>
+
+Got the plan. Here's what will be expensive at scale:
+
+<span class="text-yellow-400">1. SortMergeJoin on line 42</span>
+   The physical plan shows a SortMergeJoin with a full shuffle
+   on both sides — no broadcast. At 10M+ rows this will be
+   your biggest bottleneck. Consider broadcasting the smaller
+   table if it fits in memory (&lt;200MB).
+
+<span class="text-yellow-400">2. Window function without partitionBy (line 67)</span>
+   rank() over an unbounded window means all data goes to a
+   single executor. This will cause an OOM at scale. Add a
+   partitionBy clause — likely partitionBy("user_id") based
+   on your schema.
+
+<span class="text-yellow-400">3. Repeated scans of "events" table</span>
+   The physical plan confirms 4 separate scans. Cache this
+   DataFrame after the first read with .cache() or .persist()
+   to avoid redundant I/O on every reference.
+
+Fix the window function first — that's an OOM risk, not just
+a performance issue.</pre>
+        </div>
+
+        <p>The key difference: Claude isn't guessing from generic PySpark knowledge. It's reading your actual code issues and your actual execution plan. The advice is specific to your file, your schema, and what Databricks will actually do.</p>
+
+        <h2>How It Works Technically</h2>
+
+        <p>When CatalystOps starts, it launches a lightweight HTTP server bound to <code>127.0.0.1</code> on an OS-assigned port. The server runs in stateless HTTP mode — each request is independent, no persistent connection required.</p>
+
+        <p>For VS Code 1.99+, the extension automatically writes a <code>.vscode/mcp.json</code> file to your workspace root. GitHub Copilot reads this file on startup and discovers the server without any manual configuration.</p>
+
+        <div class="code-window my-6 not-prose">
+          <div class="code-titlebar">
+            <span class="dot bg-[#FF5F57]"></span>
+            <span class="dot bg-[#FFBD2E]"></span>
+            <span class="dot bg-[#28C840]"></span>
+            <span class="text-xs text-muted ml-2 font-mono">.vscode/mcp.json (auto-generated)</span>
+          </div>
+          <pre class="text-xs font-mono leading-relaxed p-5 overflow-x-auto text-gray-300">{
+  "servers": {
+    "catalystops": {
+      "type": "http",
+      "url": "http://127.0.0.1:&lt;port&gt;/mcp"
+    }
+  }
+}</pre>
+        </div>
+
+        <p>For Claude Desktop or other external clients, the server URL is printed to the CatalystOps Output panel in VS Code when it starts. Copy that URL into your client's MCP configuration.</p>
+
+        <div class="callout not-prose">
+          <div class="callout-label">Note</div>
+          <p class="text-sm text-gray-400 leading-relaxed">The port changes each time VS Code restarts. For VS Code 1.99+, this is handled automatically via <code>.vscode/mcp.json</code>. For external clients like Claude Desktop, you'll need to update the URL after restarting VS Code.</p>
+        </div>
+
+        <h2>Setup</h2>
+
+        <h3>VS Code (GitHub Copilot)</h3>
+
+        <p>Update to CatalystOps 0.8.2 or later from the VS Code Marketplace. The MCP server starts automatically when the extension loads. GitHub Copilot in VS Code 1.99+ will discover it via the auto-generated <code>.vscode/mcp.json</code> — no additional steps required.</p>
+
+        <h3>Claude Desktop, Cursor, Windsurf, Kiro</h3>
+
+        <p>Open the CatalystOps Output panel in VS Code (<strong>View → Output → CatalystOps</strong>). You'll see a line like:</p>
+
+        <div class="code-window my-6 not-prose">
+          <div class="code-titlebar">
+            <span class="dot bg-[#FF5F57]"></span>
+            <span class="dot bg-[#FFBD2E]"></span>
+            <span class="dot bg-[#28C840]"></span>
+            <span class="text-xs text-muted ml-2 font-mono">VS Code Output panel</span>
+          </div>
+          <pre class="text-xs font-mono leading-relaxed p-5 overflow-x-auto text-gray-300">CatalystOps MCP server running at http://127.0.0.1:49823/mcp</pre>
+        </div>
+
+        <p>Copy that URL and add it to your client's MCP server configuration. For Claude Desktop, this goes in <code>claude_desktop_config.json</code>:</p>
+
+        <div class="code-window my-6 not-prose">
+          <div class="code-titlebar">
+            <span class="dot bg-[#FF5F57]"></span>
+            <span class="dot bg-[#FFBD2E]"></span>
+            <span class="dot bg-[#28C840]"></span>
+            <span class="text-xs text-muted ml-2 font-mono">claude_desktop_config.json</span>
+          </div>
+          <pre class="text-xs font-mono leading-relaxed p-5 overflow-x-auto text-gray-300">{
+  "mcpServers": {
+    "catalystops": {
+      "url": "http://127.0.0.1:49823/mcp"
+    }
+  }
+}</pre>
+        </div>
+
+        <h3>Disabling the MCP server</h3>
+
+        <p>If you don't want the MCP server running, add this to your VS Code settings:</p>
+
+        <div class="code-window my-6 not-prose">
+          <div class="code-titlebar">
+            <span class="dot bg-[#FF5F57]"></span>
+            <span class="dot bg-[#FFBD2E]"></span>
+            <span class="dot bg-[#28C840]"></span>
+            <span class="text-xs text-muted ml-2 font-mono">settings.json</span>
+          </div>
+          <pre class="text-xs font-mono leading-relaxed p-5 overflow-x-auto text-gray-300">"catalystops.mcp.enabled": false</pre>
+        </div>
+
+        <h2>Why This Matters</h2>
+
+        <p>AI coding assistants are only as useful as the context they have. Ask an AI to review PySpark code without context, and you get generic advice: "avoid shuffles", "cache your DataFrames", "use broadcast joins". Technically correct. Practically useless without knowing whether those issues actually apply to your code.</p>
+
+        <p>CatalystOps gives AI assistants three layers of grounded context:</p>
+
+        <ul>
+          <li><strong>Static analysis</strong> — rule-based issues detected locally, no Databricks required</li>
+          <li><strong>Runtime plan</strong> — the actual physical execution plan from Databricks, showing what Spark will really do</li>
+          <li><strong>Billing data</strong> — real spend numbers, so cost discussions are anchored to actual dollars, not estimates</li>
+        </ul>
+
+        <p>Together, these turn a generic code review into a specific, actionable audit. The AI can say "this join will be a SortMergeJoin with a full shuffle, and your team spent $340 on shuffle-heavy jobs last week" instead of "shuffles can be expensive".</p>
+
+        <p>That's the difference between an AI that's read the documentation and an AI that's read your code.</p>
+
+        <!-- CTA -->
+        <div class="not-prose bg-card border border-border rounded-xl p-10 text-center">
+          <p class="text-xs text-muted mb-2">Free and open source</p>
+          <h3 class="text-xl font-bold text-white mb-3">Add AI to your PySpark workflow</h3>
+          <p class="text-sm text-gray-400 mb-6">Install CatalystOps 0.8.2 and connect Claude, Copilot, or Cursor to your live Spark analysis.</p>
+          <div class="flex gap-3 justify-center flex-wrap">
+            <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" class="btn-primary" target="_blank" style="min-width:260px;text-align:center">Install for VS Code</a>
+            <a href="https://github.com/lezwon/CatalystOps" class="btn-secondary" target="_blank" style="min-width:260px;text-align:center">View on GitHub</a>
+          </div>
+        </div>
+
+      </article>
     </div>
   </div>
 
-  <!-- Article -->
-  <article class="px-4 pb-20">
-    <div class="max-w-2xl mx-auto prose">
-
-      <h2>What is MCP?</h2>
-
-      <p>
-        The <strong>Model Context Protocol</strong> is an open standard, introduced by Anthropic, that lets AI assistants connect to external tools and data sources in a structured way. Instead of pasting your code into a chat window and asking "what's wrong with this?", an MCP-enabled AI can reach directly into your running tools — IDEs, databases, APIs — and pull live context.
-      </p>
-
-      <p>
-        Think of it as a USB-C standard for AI tool integrations. Claude has MCP support built in. So does GitHub Copilot (VS Code 1.99+), Cursor, and Windsurf. Once a tool exposes an MCP server, any of these AI clients can use it immediately — no per-integration glue code required.
-      </p>
-
-      <h2>What the CatalystOps MCP Server Exposes</h2>
-
-      <p>
-        When CatalystOps starts, it spins up a local HTTP server on <code>127.0.0.1</code> and writes a <code>.vscode/mcp.json</code> file so VS Code-based AI clients auto-discover it. No manual configuration needed in most setups.
-      </p>
-
-      <p>The server exposes three types of objects:</p>
-
-      <h3>Tools (actions the AI can invoke)</h3>
-
-      <div class="tool-card">
-        <div class="tool-name">analyze_pyspark</div>
-        <div class="tool-desc">Run local static analysis on any PySpark snippet. Returns issues with severity, line number, description, and fix suggestion. No Databricks connection required.</div>
-      </div>
-
-      <div class="tool-card">
-        <div class="tool-name">get_active_file_issues</div>
-        <div class="tool-desc">Returns CatalystOps findings for the file currently open in VS Code — the same diagnostics shown as squiggles in the editor, but as structured JSON.</div>
-      </div>
-
-      <div class="tool-card">
-        <div class="tool-name">run_dry_run</div>
-        <div class="tool-desc">Triggers a full Databricks dry run on the active file. Waits up to 5 minutes for results, then returns the physical plan, logical plan, and all plan-level issues (SortMergeJoin, shuffle count, repeated scans, etc.).</div>
-      </div>
-
-      <div class="tool-card">
-        <div class="tool-name">get_plan_analysis</div>
-        <div class="tool-desc">Returns parsed Catalyst plan issues from the last dry run without triggering a new one. Useful for asking follow-up questions about an existing result.</div>
-      </div>
-
-      <div class="tool-card">
-        <div class="tool-name">get_billing_summary</div>
-        <div class="tool-desc">Returns Databricks spend data (total dollars, DBUs, by user, by job, by workload type) for the past day, week, or month — from the local 1-hour cache.</div>
-      </div>
-
-      <div class="tool-card">
-        <div class="tool-name">refresh_billing</div>
-        <div class="tool-desc">Forces a live billing fetch from Databricks, bypassing the cache. Updates the billing tree view in VS Code simultaneously.</div>
-      </div>
-
-      <h3>Resources (data the AI can read)</h3>
-
-      <ul>
-        <li><code>catalystops://issues/current</code> — live Markdown-formatted issue list for the active file</li>
-        <li><code>catalystops://plans/last</code> — raw physical and logical plan text from the last dry run</li>
-        <li><code>catalystops://billing/summary</code> — formatted billing snapshot for the most recent cached period</li>
-      </ul>
-
-      <h3>Prompts (pre-built conversation starters)</h3>
-
-      <ul>
-        <li><strong>pyspark_code_review</strong> — injects CatalystOps local findings + plan issues as context, then asks the AI to review the code holistically</li>
-        <li><strong>optimize_spark_plan</strong> — injects the raw Catalyst plan text and asks the AI to identify join strategy improvements, shuffle reduction, caching opportunities, and predicate pushdown gaps</li>
-      </ul>
-
-      <h2>A Real Example</h2>
-
-      <p>Here is what a conversation with Claude looks like once CatalystOps is connected via MCP:</p>
-
-      <blockquote>
-        You: "Review my PySpark ETL file and tell me what will be expensive at scale."
-      </blockquote>
-
-      <p>
-        Claude calls <code>get_active_file_issues</code> to read the static analysis results already sitting in CatalystOps, then calls <code>run_dry_run</code> to trigger a live execution against your Databricks serverless compute. A minute later it comes back with:
-      </p>
-
-      <pre><code>Your pipeline has 3 issues worth addressing at scale:
-
-1. SortMergeJoin on `events` x `users` (line 42)
-   At 100GB+, this will trigger a full shuffle on both sides.
-   Consider broadcasting `users` if it stays under ~200MB.
-   Fix: df.join(broadcast(users_df), "user_id")
-
-2. Repeated scan of `events` table — read 3 times without caching (lines 18, 31, 44)
-   Each action re-executes the full lineage from source.
-   Fix: events_df.cache() before line 18, unpersist() after line 44.
-
-3. Window without partitionBy on line 67
-   Window.orderBy() without partitionBy forces all data into a single partition.
-   At scale this will OOM your executors.
-   Fix: Window.partitionBy("user_id").orderBy("event_time")</code></pre>
-
-      <p>
-        No copy-pasting, no context switching. The AI has access to both the static analysis and the live Catalyst plan — the combination that makes findings actionable.
-      </p>
-
-      <h2>How It Works Technically</h2>
-
-      <p>
-        CatalystOps starts a local HTTP server on <code>127.0.0.1</code> using an OS-assigned port on every extension activation. The server implements the <strong>Streamable HTTP MCP transport</strong> in stateless mode — each JSON-RPC request gets a fresh server instance, which avoids state corruption across sessions.
-      </p>
-
-      <p>
-        On startup, it writes a <code>.vscode/mcp.json</code> file into your workspace:
-      </p>
-
-      <pre><code>{
-  "servers": {
-    "CatalystOps": {
-      "type": "http",
-      "url": "http://127.0.0.1:54321/mcp"
-    }
-  }
-}</code></pre>
-
-      <p>
-        VS Code 1.99+ picks this up automatically — GitHub Copilot will see CatalystOps as an available MCP server without any manual setup. For Claude Desktop or other clients, copy the URL from the <strong>CatalystOps Output</strong> panel and add it to your client's server list.
-      </p>
-
-      <h2>Setup</h2>
-
-      <p>Install or update CatalystOps to 0.8.2:</p>
-
-      <pre><code>ext install CatalystOps.catalystops</code></pre>
-
-      <p>The MCP server starts automatically. In VS Code 1.99+ with GitHub Copilot or Cursor, it is auto-discovered. For Claude Desktop, add the server URL from the Output panel to your <code>claude_desktop_config.json</code>.</p>
-
-      <p>To disable the MCP server:</p>
-
-      <pre><code>// settings.json
-"catalystops.mcp.enabled": false</code></pre>
-
-      <h2>Why This Matters for PySpark Development</h2>
-
-      <p>
-        The pattern that MCP enables is fundamentally different from asking an AI to review a code snippet in chat. When an AI has tool access to your live analysis results, it can give advice that is grounded in what your actual Spark plan looks like — not generic best practices based on the code alone.
-      </p>
-
-      <p>
-        Static analysis tells you what patterns are present. Runtime plan analysis tells you what those patterns will actually do. MCP lets an AI assistant combine both signals and give you advice that is specific to your pipeline, your data, and your cluster configuration.
-      </p>
-
-      <p>
-        This is the "code + plan + cost" combination described in our earlier post on billing visibility — except now it is available to any AI assistant that speaks MCP.
-      </p>
-
-      <hr class="border-border my-10" />
-
-      <p class="text-muted text-sm">
-        CatalystOps is a free VS Code extension for PySpark and Databricks optimization.
-        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank" rel="noopener">Install it from the VS Code Marketplace.</a>
-      </p>
-
-    </div>
-  </article>
-
   <!-- Footer -->
-  <footer class="border-t border-border py-10 px-4">
-    <div class="max-w-6xl mx-auto flex flex-col items-center gap-3 text-sm text-muted">
-      <div>&copy; 2026 CatalystOps / SpendOps</div>
+  <footer class="border-t border-border py-7">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col items-center gap-3 text-sm text-muted sm:flex-row sm:justify-between">
+      <div class="flex items-center gap-2">
+        <img src="/icon.png" alt="" class="w-4 h-4 opacity-40" />
+        <span>© 2026 SpendOps. All rights reserved.</span>
+      </div>
       <div class="flex gap-6">
-        <a href="/blog/" class="hover:text-heading transition-colors">Blog</a>
-        <a href="https://github.com/lezwon/CatalystOps" class="hover:text-heading transition-colors" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" class="hover:text-heading transition-colors" target="_blank" rel="noopener">Marketplace</a>
+        <a href="https://github.com/lezwon/CatalystOps" target="_blank" class="hover:text-white transition-colors">GitHub</a>
+        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank" class="hover:text-white transition-colors">Marketplace</a>
+        <a href="/blog/" class="hover:text-white transition-colors">Blog</a>
       </div>
     </div>
   </footer>
