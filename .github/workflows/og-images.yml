@@ -1,0 +1,35 @@
+name: Generate OG Images
+
+on:
+  push:
+    paths:
+      - 'blog/**/index.html'
+  workflow_dispatch:
+
+jobs:
+  og:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Pillow
+        run: pip install Pillow --quiet
+
+      - name: Generate OG images
+        run: python3 scripts/generate_og.py
+
+      - name: Commit images
+        run: |
+          git config user.email "lezwon@gmail.com"
+          git config user.name "lezwon"
+          git add blog/*/og.png
+          git diff --staged --quiet && echo "No changes" || git commit -m "Auto-generate OG images [skip ci]"
+          git push
