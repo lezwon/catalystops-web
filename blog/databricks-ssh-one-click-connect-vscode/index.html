@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>One-Click SSH to Databricks Clusters from VS Code · CatalystOps 0.9.1</title>
+  <meta name="description" content="CatalystOps 0.9.1 lets you SSH into any Databricks cluster directly from VS Code — one click, no CLI commands, no manual setup." />
+  <meta property="og:title" content="One-Click SSH to Databricks Clusters from VS Code · CatalystOps 0.9.1" />
+  <meta property="og:description" content="CatalystOps 0.9.1 lets you SSH into any Databricks cluster directly from VS Code — one click, no CLI commands, no manual setup." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://spendops.dev/blog/databricks-ssh-one-click-connect-vscode/" />
+  <link rel="icon" type="image/png" href="/icon.png" />
+  <link rel="canonical" href="https://spendops.dev/blog/databricks-ssh-one-click-connect-vscode/" />
+  <meta property="og:image" content="https://spendops.dev/blog/databricks-ssh-one-click-connect-vscode/og.png" />
+  <meta name="twitter:image" content="https://spendops.dev/blog/databricks-ssh-one-click-connect-vscode/og.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#F97316', 'brand-dim': '#EA580C',
+            surface: '#0F1117', card: '#161B27',
+            border: '#1E2535', muted: '#6B7280',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/theme.css" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "One-Click SSH to Databricks Clusters from VS Code — CatalystOps 0.9.1",
+    "datePublished": "2026-03-22",
+    "author": { "@type": "Organization", "name": "SpendOps" },
+    "publisher": { "@type": "Organization", "name": "SpendOps", "url": "https://spendops.dev" },
+    "url": "https://spendops.dev/blog/databricks-ssh-one-click-connect-vscode/"
+  }
+  </script>
+</head>
+<body class="text-gray-100 font-sans antialiased">
+
+  <!-- ── Nav ──────────────────────────────────────────────────────────────── -->
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-border bg-surface/80 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <a href="/" class="flex items-center gap-2.5">
+          <img src="/icon.png" alt="CatalystOps" class="w-7 h-7" />
+          <span class="font-bold text-lg tracking-tight">CatalystOps</span>
+        </a>
+        <span class="text-xs text-muted font-normal whitespace-nowrap">by&nbsp;<a href="/" class="hover:text-white transition-colors">SpendOps</a></span>
+      </div>
+      <div class="hidden md:flex items-center gap-8 text-sm text-gray-400">
+        <a href="/#features" class="nav-link hover:text-white transition-colors">Features</a>
+        <a href="/#how-it-works" class="nav-link hover:text-white transition-colors">How it works</a>
+        <a href="/#rules" class="nav-link hover:text-white transition-colors">Rules</a>
+        <a href="/#mcp" class="nav-link hover:text-white transition-colors">MCP</a>
+        <a href="/blog/" class="nav-link text-brand">Blog</a>
+      </div>
+      <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
+         target="_blank"
+         class="btn-nav">Install Free</a>
+    </div>
+  </nav>
+
+  <!-- Page -->
+  <div class="pt-16">
+    <div class="max-w-[700px] mx-auto px-6">
+
+      <!-- Breadcrumb -->
+      <div class="flex items-center gap-2 text-xs text-muted pt-6">
+        <a href="/" class="hover:text-brand transition-colors">Home</a>
+        <span class="text-border">›</span>
+        <a href="/blog/" class="hover:text-brand transition-colors">Blog</a>
+        <span class="text-border">›</span>
+        <span class="text-gray-400">CatalystOps 0.9.1</span>
+      </div>
+
+      <!-- Article header -->
+      <header class="pt-5 pb-10 border-b border-border mb-12">
+        <div class="flex items-center gap-3 mb-5 flex-wrap">
+          <span class="badge">Release Notes</span>
+          <span class="text-xs text-muted">March 22, 2026</span>
+          <span class="text-xs text-muted font-mono bg-card border border-border rounded px-2 py-0.5">v0.9.1</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold leading-tight mb-5">
+          <span class="gradient-text">One Click.</span><br/>
+          SSH Into Any Databricks Cluster from VS Code
+        </h1>
+        <p class="text-lg text-gray-400 leading-relaxed">
+          CatalystOps 0.9.1 adds a new Clusters sidebar panel. Find your cluster, click the SSH button, and VS Code opens a remote window directly on the Databricks driver — no terminal commands needed.
+        </p>
+      </header>
+
+      <!-- Article -->
+      <article class="prose pb-10 sm:pb-24">
+
+        <h2>What's new</h2>
+        <p>You can now SSH into any Databricks cluster without leaving VS Code. A new <strong>Clusters</strong> panel appears in the CatalystOps sidebar listing all your workspace clusters and their current status.</p>
+        <p>Click the SSH button next to any cluster. If the cluster is stopped, CatalystOps starts it for you and waits until it's ready. Once it's running, VS Code Remote SSH opens automatically — you're dropped into a full remote environment on the cluster driver.</p>
+        <p>If anything needs fixing first (like the cluster's access mode or Spark version), CatalystOps will tell you what's wrong and offer to fix it with a single click.</p>
+
+        <div class="callout not-prose">
+          <div class="callout-label">ℹ️ Requirements</div>
+          <p class="text-sm text-gray-400 leading-relaxed">You'll need the <a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh" target="_blank" class="text-brand">VS Code Remote SSH extension</a> and <a href="https://docs.databricks.com/dev-tools/cli/install.html" target="_blank" class="text-brand">Databricks CLI ≥ 0.269</a> installed. CatalystOps checks both and will prompt you if either is missing.</p>
+        </div>
+
+        <h2>What you can do once connected</h2>
+        <p>Once you're in, VS Code is running directly on the cluster driver. That means:</p>
+        <ul>
+          <li>Open and edit notebooks and scripts on the cluster's filesystem</li>
+          <li>Use the integrated terminal with full access to the Spark environment</li>
+          <li>Run Python with the cluster's libraries and configurations already loaded</li>
+          <li>Debug code with the VS Code debugger attached to the remote environment</li>
+        </ul>
+
+        <h2>Getting started</h2>
+        <ol>
+          <li>Make sure <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank">CatalystOps</a> and <a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh" target="_blank">Remote SSH</a> are installed</li>
+          <li>Open the CatalystOps sidebar — look for the <strong>Clusters</strong> panel</li>
+          <li>Click the SSH button next to the cluster you want to connect to</li>
+          <li>VS Code will handle the rest and open a new remote window</li>
+        </ol>
+
+        <hr />
+
+        <!-- CTA -->
+        <div class="not-prose bg-card border border-border rounded-xl p-10 text-center">
+          <p class="text-xs text-muted mb-2">Free &amp; open source</p>
+          <h3 class="text-xl font-bold text-white mb-3">Try CatalystOps today</h3>
+          <p class="text-sm text-gray-400 mb-6">Catch PySpark performance issues before they hit production — inline, in your editor.</p>
+          <div class="flex gap-3 justify-center flex-wrap">
+            <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" class="btn-primary" target="_blank" style="min-width:260px;text-align:center">Install for VS Code</a>
+            <a href="https://github.com/lezwon/CatalystOps" class="btn-secondary" target="_blank" style="min-width:260px;text-align:center">View on GitHub</a>
+          </div>
+        </div>
+
+      </article>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-border py-7">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col items-center gap-3 text-sm text-muted sm:flex-row sm:justify-between">
+      <div class="flex items-center gap-2">
+        <img src="/icon.png" alt="" class="w-4 h-4 opacity-40" />
+        <span>© 2026 SpendOps. All rights reserved.</span>
+      </div>
+      <div class="flex gap-6">
+        <a href="https://github.com/lezwon/CatalystOps" target="_blank" class="hover:text-white transition-colors">GitHub</a>
+        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank" class="hover:text-white transition-colors">Marketplace</a>
+        <a href="/blog/" class="hover:text-white transition-colors">Blog</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

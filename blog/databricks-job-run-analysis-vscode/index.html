@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analyze Past Databricks Job Runs Without Re-Running · CatalystOps 0.9.0</title>
+  <meta name="description" content="CatalystOps 0.9.0 adds a Jobs sidebar that lets you analyze historical Databricks job runs — reading Spark event logs from DBFS to surface plan issues and code diagnostics without re-executing anything." />
+  <meta property="og:title" content="Analyze Past Databricks Job Runs Without Re-Running · CatalystOps 0.9.0" />
+  <meta property="og:description" content="CatalystOps 0.9.0 adds a Jobs sidebar that lets you analyze historical Databricks job runs — reading Spark event logs from DBFS to surface plan issues without re-executing anything." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://spendops.dev/blog/databricks-job-run-analysis-vscode/" />
+  <link rel="icon" type="image/png" href="/icon.png" />
+  <link rel="canonical" href="https://spendops.dev/blog/databricks-job-run-analysis-vscode/" />
+  <meta property="og:image" content="https://spendops.dev/blog/databricks-job-run-analysis-vscode/og.png" />
+  <meta name="twitter:image" content="https://spendops.dev/blog/databricks-job-run-analysis-vscode/og.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#F97316', 'brand-dim': '#EA580C',
+            surface: '#0F1117', card: '#161B27',
+            border: '#1E2535', muted: '#6B7280',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/theme.css" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Analyze Past Databricks Job Runs Without Re-Running — CatalystOps 0.9.0",
+    "datePublished": "2026-03-22",
+    "author": { "@type": "Organization", "name": "SpendOps" },
+    "publisher": { "@type": "Organization", "name": "SpendOps", "url": "https://spendops.dev" },
+    "url": "https://spendops.dev/blog/databricks-job-run-analysis-vscode/"
+  }
+  </script>
+</head>
+<body class="text-gray-100 font-sans antialiased">
+
+  <!-- ── Nav ──────────────────────────────────────────────────────────────── -->
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-border bg-surface/80 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <a href="/" class="flex items-center gap-2.5">
+          <img src="/icon.png" alt="CatalystOps" class="w-7 h-7" />
+          <span class="font-bold text-lg tracking-tight">CatalystOps</span>
+        </a>
+        <span class="text-xs text-muted font-normal whitespace-nowrap">by&nbsp;<a href="/" class="hover:text-white transition-colors">SpendOps</a></span>
+      </div>
+      <div class="hidden md:flex items-center gap-8 text-sm text-gray-400">
+        <a href="/#features" class="nav-link hover:text-white transition-colors">Features</a>
+        <a href="/#how-it-works" class="nav-link hover:text-white transition-colors">How it works</a>
+        <a href="/#rules" class="nav-link hover:text-white transition-colors">Rules</a>
+        <a href="/#mcp" class="nav-link hover:text-white transition-colors">MCP</a>
+        <a href="/blog/" class="nav-link text-brand">Blog</a>
+      </div>
+      <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
+         target="_blank"
+         class="btn-nav">Install Free</a>
+    </div>
+  </nav>
+
+  <!-- Page -->
+  <div class="pt-16">
+    <div class="max-w-[700px] mx-auto px-6">
+
+      <!-- Breadcrumb -->
+      <div class="flex items-center gap-2 text-xs text-muted pt-6">
+        <a href="/" class="hover:text-brand transition-colors">Home</a>
+        <span class="text-border">›</span>
+        <a href="/blog/" class="hover:text-brand transition-colors">Blog</a>
+        <span class="text-border">›</span>
+        <span class="text-gray-400">CatalystOps 0.9.0</span>
+      </div>
+
+      <!-- Article header -->
+      <header class="pt-5 pb-10 border-b border-border mb-12">
+        <div class="flex items-center gap-3 mb-5 flex-wrap">
+          <span class="badge">Feature Deep-Dive</span>
+          <span class="text-xs text-muted">March 22, 2026</span>
+          <span class="text-xs text-muted font-mono bg-card border border-border rounded px-2 py-0.5">v0.9.0</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold leading-tight mb-5">
+          <span class="gradient-text">No Re-Run Required.</span><br/>
+          Analyze Past Databricks Job Runs from VS Code
+        </h1>
+        <p class="text-lg text-gray-400 leading-relaxed">
+          Every time a Databricks job runs, it writes a detailed Spark event log to DBFS. CatalystOps 0.9.0 reads those logs to surface plan issues and code diagnostics from <em>past</em> runs —
+          without executing anything again.
+        </p>
+      </header>
+
+      <!-- Article -->
+      <article class="prose pb-10 sm:pb-24">
+
+        <h2>The Gap in Spark Debugging</h2>
+        <p>Until now, analyzing a Spark job's physical plan required running it again — either via a dry run or by re-triggering the actual job. That's expensive, slow, and often impossible for jobs that consume production data or have long runtimes.</p>
+        <p>But the information you need is already there. Every Databricks job writes a Spark event log to DBFS — a structured file that contains every stage, task, and query execution plan from the run. CatalystOps 0.9.0 taps directly into those logs.</p>
+
+        <h2>The Jobs Sidebar</h2>
+        <p>A new <strong>Jobs</strong> tree view appears in the CatalystOps sidebar alongside your Clusters view. It lists all Databricks jobs in your workspace, each showing its last-run status:</p>
+        <ul>
+          <li>✅ <strong>Success</strong> — job completed without errors</li>
+          <li>❌ <strong>Failed</strong> — job run ended in failure</li>
+          <li>🔄 <strong>Running</strong> — job currently in progress</li>
+          <li>⏭ <strong>Skipped / Cancelled</strong></li>
+        </ul>
+        <p>Click any job to trigger historical run analysis. No re-execution required.</p>
+
+        <h3>How the Analysis Works</h3>
+        <p>When you click a job, CatalystOps:</p>
+        <ol>
+          <li>Fetches the most recent completed run via the Databricks Jobs API</li>
+          <li>Reads the Spark event log from DBFS (<code>dbfs:/cluster-logs/&lt;cluster-id&gt;/eventlog/</code>)</li>
+          <li>Parses the event log to extract physical query plans from all <code>SparkListenerSQLExecutionStart</code> events</li>
+          <li>Runs the full CatalystOps plan analysis on those plans — detecting shuffles, sort aggregates, missing partition filters, single-partition bottlenecks, and more</li>
+          <li>Correlates plan issues with the source notebook using the <strong>View Source</strong> button in the DAG</li>
+          <li>Opens a <strong>markdown report</strong> in a new editor tab with the full findings</li>
+        </ol>
+
+        <div class="callout not-prose">
+          <div class="callout-label">💡 What gets analyzed</div>
+          <p class="text-sm text-gray-400 leading-relaxed">The same plan-level detectors that run during a dry run apply to historical runs: <code>SinglePartitionBottleneck</code>, <code>SortAggregate</code>, <code>GlobalWindow</code>, missing partition filters, broadcast join opportunities, and more.</p>
+        </div>
+
+        <h2>Interactive DAG for Job Runs</h2>
+        <p>0.9.0 also ships an improved DAG view that now renders for job run analysis results. The plan tree displays:</p>
+        <ul>
+          <li><strong>Operator tree</strong> with <code>└─</code> / <code>├─</code> connectors</li>
+          <li><strong>Query groups</strong> collapsed into accordions with execution counts</li>
+          <li><strong>Human-friendly filter conditions</strong> (<code>col not null</code>, <code>a and b</code>)</li>
+          <li><strong>View Source</strong> button to open the originating notebook</li>
+          <li><strong>Raw Plans</strong> collapsible section for debugging</li>
+        </ul>
+
+        <h2>New Plan-Level Issue Detectors</h2>
+        <p>0.9.0 ships three new detectors that apply to both live dry runs and historical job run analysis:</p>
+
+        <table>
+          <thead><tr><th>Detector</th><th>What it catches</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>SinglePartitionBottleneck</code></td>
+              <td><code>Exchange SinglePartition</code> — collects all data to a single executor (caused by global aggregations or global window functions). Often the root cause of driver OOM.</td>
+            </tr>
+            <tr>
+              <td><code>SortAggregate</code></td>
+              <td>Sort-based aggregation — slower than hash-based and prone to spilling on large datasets. Usually fixable by enabling AQE or rewriting the query.</td>
+            </tr>
+            <tr>
+              <td><code>GlobalWindow</code> via <code>RunningWindowFunction</code></td>
+              <td>Extends the existing global-window check to cover Databricks Photon's <code>RunningWindowFunction</code> operator, which generates a full-data shuffle.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>AQE Initial Plan Support</h2>
+        <p>When Adaptive Query Execution (AQE) is enabled, Databricks may not produce a "final" physical plan until partway through execution. Previously, CatalystOps skipped these plans entirely — silently missing every issue in AQE-enabled jobs.</p>
+        <p>0.9.0 now analyzes plans whose operator tree sits entirely under <code>== Initial Plan ==</code>, so AQE jobs are no longer invisible to the analyzer.</p>
+
+        <h2>MCP: Get Last Job Run Analysis</h2>
+        <p>The MCP server gains a new <code>get_last_job_run_analysis</code> tool that exposes the most recent job run's plan issues and physical plan text to Claude (or any MCP client) — without fetching from Databricks again. Useful for asking "what was wrong with the last run?" directly in your AI assistant.</p>
+
+        <h2>Use Cases</h2>
+        <p>Historical job run analysis is especially useful for:</p>
+        <ul>
+          <li><strong>Production incident review</strong> — a job failed or ran slow; analyze the plan from that specific run without touching production data</li>
+          <li><strong>Optimization without re-running</strong> — identify shuffle-heavy stages in a 3-hour job by analyzing the event log from the last run</li>
+          <li><strong>Scheduled job auditing</strong> — regularly check your scheduled jobs for plan regressions without needing to trigger them manually</li>
+          <li><strong>Onboarding</strong> — understand what a job is actually doing by reading its physical plan, not just its source code</li>
+        </ul>
+
+        <h2>Getting Started</h2>
+        <ol>
+          <li>Install CatalystOps from the <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank">VS Code Marketplace</a></li>
+          <li>Configure your Databricks workspace connection</li>
+          <li>Open the <strong>CatalystOps Jobs</strong> sidebar panel</li>
+          <li>Click any job to analyze its most recent run</li>
+          <li>The report opens in a new editor tab — no re-execution needed</li>
+        </ol>
+
+        <hr />
+
+        <!-- CTA -->
+        <div class="not-prose bg-card border border-border rounded-xl p-10 text-center">
+          <p class="text-xs text-muted mb-2">Free &amp; open source</p>
+          <h3 class="text-xl font-bold text-white mb-3">Try CatalystOps today</h3>
+          <p class="text-sm text-gray-400 mb-6">Catch PySpark performance issues before they hit production — inline, in your editor.</p>
+          <div class="flex gap-3 justify-center flex-wrap">
+            <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" class="btn-primary" target="_blank" style="min-width:260px;text-align:center">Install for VS Code</a>
+            <a href="https://github.com/lezwon/CatalystOps" class="btn-secondary" target="_blank" style="min-width:260px;text-align:center">View on GitHub</a>
+          </div>
+        </div>
+
+      </article>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-border py-7">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col items-center gap-3 text-sm text-muted sm:flex-row sm:justify-between">
+      <div class="flex items-center gap-2">
+        <img src="/icon.png" alt="" class="w-4 h-4 opacity-40" />
+        <span>© 2026 SpendOps. All rights reserved.</span>
+      </div>
+      <div class="flex gap-6">
+        <a href="https://github.com/lezwon/CatalystOps" target="_blank" class="hover:text-white transition-colors">GitHub</a>
+        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank" class="hover:text-white transition-colors">Marketplace</a>
+        <a href="/blog/" class="hover:text-white transition-colors">Blog</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
