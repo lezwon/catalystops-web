@@ -2,11 +2,11 @@
 
 Marketing website for [CatalystOps](https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops), a free VS Code extension that catches PySpark and Databricks performance issues before they hit production.
 
-Live at **[spendops.dev](https://spendops.dev)**
+Live at **[catalystops.dev](https://catalystops.dev)**
 
 ## What is CatalystOps?
 
-CatalystOps is a VS Code extension by [SpendOps](https://spendops.dev) that brings Spark query analysis directly into your editor. Instead of context-switching to the Databricks UI, Spark History Server, or a billing console, everything surfaces inline as you write code.
+CatalystOps is a VS Code extension by [SpendOps](https://catalystops.dev) that brings Spark query analysis directly into your editor. Instead of context-switching to the Databricks UI, Spark History Server, or a billing console, everything surfaces inline as you write code.
 
 **Key features:**
 

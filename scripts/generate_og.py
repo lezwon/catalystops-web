@@ -81,7 +81,7 @@ def make_og(meta, fv_path, fm_path, out):
     div_y=cy2-70*SCALE
     d.line([(px,div_y),(cx2-50*SCALE,div_y)],fill=BORDER,width=SCALE)
     d.text((px,cy2-58*SCALE),"CatalystOps",fill=ORANGE,font=fbr)
-    d.text((px,cy2-32*SCALE),"spendops.dev",fill=DGRAY,font=fu)
+    d.text((px,cy2-32*SCALE),"catalystops.dev",fill=DGRAY,font=fu)
     if meta["version"]:
         vw=int(d.textlength(meta["version"],font=fver))+28*SCALE
         px2=cx2-50*SCALE-vw; pcy=cy2-45*SCALE
