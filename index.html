@@ -141,8 +141,8 @@
       <div class="hidden md:flex items-center gap-8 text-sm text-gray-400">
         <a href="#features" class="nav-link hover:text-white transition-colors">Features</a>
         <a href="#how-it-works" class="nav-link hover:text-white transition-colors">How it works</a>
-        <a href="#rules" class="nav-link hover:text-white transition-colors">Rules</a>
         <a href="#mcp" class="nav-link hover:text-white transition-colors">MCP</a>
+        <a href="/docs/getting-started.html" class="nav-link hover:text-white transition-colors">Docs</a>
         <a href="/blog/" class="nav-link hover:text-white transition-colors">Blog</a>
       </div>
       <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
@@ -417,78 +417,6 @@
               with cost annotations, join strategies, and actionable fixes — all in the sidebar.
             </p>
           </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Rules showcase ────────────────────────────────────────────────────── -->
-  <section id="rules" class="py-24 px-6 border-t border-border">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center mb-16">
-        <div class="badge mb-4">Detection rules</div>
-        <h2 class="text-4xl font-bold">What CatalystOps catches</h2>
-        <p class="text-gray-400 mt-4 max-w-xl mx-auto">
-          Rules span Spark actions, joins, streaming, Delta Lake, DLT pipelines, and security.
-        </p>
-      </div>
-
-      <div class="grid md:grid-cols-2 gap-4">
-        <!-- Rule groups -->
-        <div class="bg-card border border-border rounded-xl p-6">
-          <div class="text-brand font-semibold text-sm mb-4 flex items-center gap-2">
-            <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div> Critical / Data correctness
-          </div>
-          <ul class="space-y-2 text-sm text-gray-400">
-            <li class="flex items-center gap-2"><span class="text-red-400">●</span> SQL injection via f-string in spark.sql()</li>
-            <li class="flex items-center gap-2"><span class="text-red-400">●</span> Kafka auto-commit enabled</li>
-            <li class="flex items-center gap-2"><span class="text-red-400">●</span> APPLY AS DELETE WHEN wrong clause order (CDC)</li>
-            <li class="flex items-center gap-2"><span class="text-yellow-400">●</span> union() / intersect() column order mismatch</li>
-            <li class="flex items-center gap-2"><span class="text-yellow-400">●</span> Streaming inner join silently drops events</li>
-            <li class="flex items-center gap-2"><span class="text-yellow-400">●</span> FLOAT / DOUBLE for financial columns</li>
-          </ul>
-        </div>
-
-        <div class="bg-card border border-border rounded-xl p-6">
-          <div class="text-brand font-semibold text-sm mb-4 flex items-center gap-2">
-            <div class="w-1.5 h-1.5 rounded-full bg-yellow-500"></div> Performance
-          </div>
-          <ul class="space-y-2 text-sm text-gray-400">
-            <li class="flex items-center gap-2"><span class="text-yellow-400">●</span> collect() / toPandas() on large DataFrames</li>
-            <li class="flex items-center gap-2"><span class="text-yellow-400">●</span> Cross join / cartesian product</li>
-            <li class="flex items-center gap-2"><span class="text-yellow-400">●</span> Global orderBy (full shuffle)</li>
-            <li class="flex items-center gap-2"><span class="text-yellow-400">●</span> withColumn() inside a loop</li>
-            <li class="flex items-center gap-2"><span class="text-yellow-400">●</span> Window.orderBy() without partitionBy()</li>
-            <li class="flex items-center gap-2"><span class="text-yellow-400">●</span> Repeated source scan without cache</li>
-          </ul>
-        </div>
-
-        <div class="bg-card border border-border rounded-xl p-6">
-          <div class="text-brand font-semibold text-sm mb-4 flex items-center gap-2">
-            <div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div> Streaming
-          </div>
-          <ul class="space-y-2 text-sm text-gray-400">
-            <li class="flex items-center gap-2"><span class="text-blue-400">●</span> No .trigger() — continuous micro-batches</li>
-            <li class="flex items-center gap-2"><span class="text-blue-400">●</span> groupBy() without watermark (unbounded state)</li>
-            <li class="flex items-center gap-2"><span class="text-blue-400">●</span> Dynamic allocation on streaming cluster</li>
-            <li class="flex items-center gap-2"><span class="text-blue-400">●</span> Stateful streaming without RocksDB</li>
-            <li class="flex items-center gap-2"><span class="text-blue-400">●</span> Auto Loader without maxBytesPerTrigger</li>
-            <li class="flex items-center gap-2"><span class="text-blue-400">●</span> Checkpoint stored on DBFS</li>
-          </ul>
-        </div>
-
-        <div class="bg-card border border-border rounded-xl p-6">
-          <div class="text-brand font-semibold text-sm mb-4 flex items-center gap-2">
-            <div class="w-1.5 h-1.5 rounded-full bg-purple-400"></div> Delta Lake &amp; DLT
-          </div>
-          <ul class="space-y-2 text-sm text-gray-400">
-            <li class="flex items-center gap-2"><span class="text-purple-400">●</span> MERGE without Deletion Vectors</li>
-            <li class="flex items-center gap-2"><span class="text-purple-400">●</span> MERGE without Row-Level Concurrency</li>
-            <li class="flex items-center gap-2"><span class="text-purple-400">●</span> OPTIMIZE after every MERGE (latency spikes)</li>
-            <li class="flex items-center gap-2"><span class="text-purple-400">●</span> DROP TABLE + CREATE TABLE (non-atomic)</li>
-            <li class="flex items-center gap-2"><span class="text-purple-400">●</span> DLT PARTITION BY instead of Liquid Clustering</li>
-            <li class="flex items-center gap-2"><span class="text-purple-400">●</span> read_files() without schemaHints</li>
-          </ul>
         </div>
       </div>
     </div>
