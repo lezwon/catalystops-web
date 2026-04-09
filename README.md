@@ -17,7 +17,7 @@ CatalystOps is a VS Code extension by [SpendOps](https://catalystops.dev) that b
 - **Schema validation** — tracks inferred schemas across DataFrames, validates join column types, detects silent `union()` column-order mismatches.
 - **MCP server** — built-in Streamable HTTP MCP server auto-discovered by VS Code 1.99+. Claude, GitHub Copilot, Cursor, and Windsurf can call CatalystOps tools directly to analyze code, fetch billing data, and run dry runs through natural language.
 
-**Free and MIT licensed.** Available on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops) and [Open VSX](https://open-vsx.org/extension/CatalystOps/catalystops).
+**Free and Elastic License 2.0.** Available on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops) and [Open VSX](https://open-vsx.org/extension/CatalystOps/catalystops).
 
 ## Links
 
