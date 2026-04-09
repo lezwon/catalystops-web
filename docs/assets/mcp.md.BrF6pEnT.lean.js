@@ -1,0 +1,1 @@
+import{_ as s,o as t,c as e,ag as n}from"./chunks/framework.OsDJF_Ea.js";const u=JSON.parse('{"title":"MCP Server","description":"","frontmatter":{},"headers":[],"relativePath":"mcp.md","filePath":"mcp.md"}'),i={name:"mcp.md"};function l(r,a,o,d,p,c){return t(),e("div",null,[...a[0]||(a[0]=[n("",18)])])}const g=s(i,[["render",l]]);export{u as __pageData,g as default};
