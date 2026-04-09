@@ -392,11 +392,10 @@
           <div class="pt-2">
             <h3 class="text-xl font-semibold text-white mb-2">Connect to Databricks (optional)</h3>
             <p class="text-gray-400 leading-relaxed">
-              Add your workspace URL and personal access token via
-              <em>CatalystOps: Configure Databricks Connection</em>.
-              Pick cluster or Serverless execution mode. CatalystOps reads your
-              <code class="bg-card border border-border text-orange-400 px-1.5 py-0.5 rounded text-sm">~/.databrickscfg</code>
-              automatically if it exists.
+              Run <em>CatalystOps: Configure Databricks Connection</em> from the Command Palette.
+              The wizard detects what&#39;s on your machine — Azure CLI, GCP ADC,
+              <code class="bg-card border border-border text-orange-400 px-1.5 py-0.5 rounded text-sm">~/.databrickscfg</code>,
+              or a personal access token — and shows only those options.
             </p>
           </div>
         </div>
@@ -429,7 +428,8 @@
           <div class="badge mb-6">MCP Integration</div>
           <h2 class="text-4xl font-bold mb-6">Talk to your Spark pipeline with Claude</h2>
           <p class="text-gray-400 leading-relaxed mb-6">
-            CatalystOps ships a built-in MCP server auto-discovered by VS Code 1.99+.
+            CatalystOps ships a built-in MCP server that starts automatically when VS Code opens.
+            It runs on a static port (<code class="text-brand font-mono text-xs">127.0.0.1:49152/mcp</code>), auto-discovered by VS Code 1.99+.
             Claude and other AI clients can call CatalystOps tools directly —
             analyze code, fetch billing data, run dry-runs, and read plan results
             through natural language.
