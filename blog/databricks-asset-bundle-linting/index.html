@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Databricks Asset Bundle Linting & Task Discovery in VS Code · CatalystOps 0.12.0</title>
+  <meta name="description" content="CatalystOps 0.12.0 adds Databricks Asset Bundle support: a sidebar panel that lists every DAB task, 40+ schema validation rules inline in databricks.yml, and bundle-aware connection setup." />
+  <meta property="og:title" content="Databricks Asset Bundle Linting & Task Discovery in VS Code · CatalystOps 0.12.0" />
+  <meta property="og:description" content="CatalystOps 0.12.0 adds Databricks Asset Bundle support: a sidebar panel that lists every DAB task, 40+ schema validation rules inline in databricks.yml, and bundle-aware connection setup." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://catalystops.dev/blog/databricks-asset-bundle-linting/" />
+  <link rel="icon" type="image/png" href="/icon.png" />
+  <link rel="canonical" href="https://catalystops.dev/blog/databricks-asset-bundle-linting/" />
+  <meta property="og:image" content="https://catalystops.dev/icon.png" />
+  <meta name="twitter:image" content="https://catalystops.dev/icon.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#F97316', 'brand-dim': '#EA580C',
+            surface: '#0F1117', card: '#161B27',
+            border: '#1E2535', muted: '#6B7280',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/theme.css" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Databricks Asset Bundle Linting & Task Discovery in VS Code — CatalystOps 0.12.0",
+    "datePublished": "2026-04-23",
+    "author": { "@type": "Organization", "name": "SpendOps" },
+    "publisher": { "@type": "Organization", "name": "SpendOps", "url": "https://catalystops.dev" },
+    "url": "https://catalystops.dev/blog/databricks-asset-bundle-linting/"
+  }
+  </script>
+</head>
+<body class="text-gray-100 font-sans antialiased">
+
+  <!-- ── Nav ──────────────────────────────────────────────────────────────── -->
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-border bg-surface/80 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <a href="/" class="flex items-center gap-2.5">
+          <img src="/icon.png" alt="CatalystOps" class="w-7 h-7" />
+          <span class="font-bold text-lg tracking-tight">CatalystOps</span>
+        </a>
+      </div>
+      <div class="hidden md:flex items-center gap-8 text-sm text-gray-400">
+        <a href="/#features" class="nav-link hover:text-white transition-colors">Features</a>
+        <a href="/#how-it-works" class="nav-link hover:text-white transition-colors">How it works</a>
+        <a href="/#mcp" class="nav-link hover:text-white transition-colors">MCP</a>
+        <a href="/docs/getting-started.html" class="nav-link hover:text-white transition-colors">Docs</a>
+        <a href="/blog/" class="nav-link hover:text-white transition-colors">Blog</a>
+      </div>
+      <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
+         target="_blank"
+         class="btn-nav">Install Free</a>
+    </div>
+  </nav>
+
+  <!-- Page -->
+  <div class="pt-16">
+    <div class="max-w-[700px] mx-auto px-6">
+
+      <!-- Breadcrumb -->
+      <div class="flex items-center gap-2 text-xs text-muted pt-6">
+        <a href="/" class="hover:text-brand transition-colors">Home</a>
+        <span class="text-border">›</span>
+        <a href="/blog/" class="hover:text-brand transition-colors">Blog</a>
+        <span class="text-border">›</span>
+        <span class="text-gray-400">CatalystOps 0.12.0</span>
+      </div>
+
+      <!-- Article header -->
+      <header class="pt-5 pb-10 border-b border-border mb-12">
+        <div class="flex items-center gap-3 mb-5 flex-wrap">
+          <span class="badge">Feature Deep-Dive</span>
+          <span class="text-xs text-muted">April 23, 2026</span>
+          <span class="text-xs text-muted font-mono bg-card border border-border rounded px-2 py-0.5">v0.12.0</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold leading-tight mb-5">
+          <span class="gradient-text">Bundle Tasks. Bundle Linting.</span><br/>
+          Databricks Asset Bundle Support in VS Code
+        </h1>
+        <p class="text-lg text-gray-400 leading-relaxed">
+          CatalystOps 0.12.0 understands your <code>databricks.yml</code>. It lists every task in the sidebar,
+          validates your bundle YAML with 40+ schema-aware rules as you type, and pre-fills connection details
+          from your bundle targets — no URL to copy-paste.
+        </p>
+      </header>
+
+      <!-- Article -->
+      <article class="prose pb-10 sm:pb-24">
+
+        <h2>The Problem with DAB Workflows Today</h2>
+        <p>Databricks Asset Bundles (DAB) are the standard way to define and deploy Databricks jobs, pipelines, and ML resources as code. A <code>databricks.yml</code> file declares jobs with tasks pointing to Python scripts or notebooks, cluster configs, target environments, and permissions.</p>
+        <p>But until now, working with a bundle in VS Code meant a lot of manual context-switching: finding which Python file a task points to, hunting down the right workspace host for a target environment, and catching YAML schema mistakes only after <code>databricks bundle validate</code> fails in the terminal.</p>
+        <p>CatalystOps 0.12.0 closes that gap entirely — directly inside the editor.</p>
+
+        <h2>Bundle Tasks Panel</h2>
+        <p>When CatalystOps detects <code>databricks.yml</code> in your workspace root, a <strong>Bundle Tasks</strong> section appears in the CatalystOps sidebar. It lists every task across the main bundle file and all files referenced by <code>include:</code> patterns:</p>
+        <ul>
+          <li><strong>spark_python_task</strong> entries show the Python file path relative to the bundle root</li>
+          <li><strong>notebook_task</strong> entries with local paths show the notebook path</li>
+          <li>Click any task to open its source file in the editor</li>
+          <li>Use the inline <strong>Analyze</strong> button to run a dry-run plan analysis on that task's script — no need to navigate to the file first</li>
+        </ul>
+        <p>The panel refreshes automatically whenever <code>databricks.yml</code> or any included resource YAML changes.</p>
+
+        <div class="callout not-prose">
+          <div class="callout-label">💡 No Databricks CLI required</div>
+          <p class="text-sm text-gray-400 leading-relaxed">CatalystOps parses the bundle YAML file-side only. You don't need the Databricks CLI installed for the sidebar or linting features — only for actual bundle deploy/run operations.</p>
+        </div>
+
+        <h2>40+ Inline YAML Validation Rules</h2>
+        <p>CatalystOps validates your bundle YAML as you type. Diagnostics appear as underlines in the editor — no terminal command needed. The rules cover the full bundle schema including resource types, enum fields, cluster configuration, and Databricks-specific quirks that the generic YAML language server doesn't know about.</p>
+
+        <h3>Structure and Enum Checks</h3>
+        <p>Invalid top-level keys, unknown resource types, and unrecognized enum values are caught immediately:</p>
+        <table>
+          <thead><tr><th>Field</th><th>Valid values</th></tr></thead>
+          <tbody>
+            <tr><td><code>data_security_mode</code></td><td><code>SINGLE_USER</code>, <code>USER_ISOLATION</code>, <code>NONE</code>, <code>LEGACY_*</code></td></tr>
+            <tr><td><code>runtime_engine</code></td><td><code>PHOTON</code>, <code>STANDARD</code></td></tr>
+            <tr><td><code>target.mode</code></td><td><code>development</code>, <code>production</code></td></tr>
+            <tr><td><code>run_if</code> (task)</td><td><code>ALL_SUCCESS</code>, <code>ALL_DONE</code>, <code>NONE_FAILED</code>, <code>AT_LEAST_ONE_SUCCESS</code>, <code>ALL_FAILED</code>, <code>AT_LEAST_ONE_FAILED</code></td></tr>
+            <tr><td><code>trigger.periodic.unit</code></td><td><code>HOURS</code>, <code>DAYS</code>, <code>WEEKS</code></td></tr>
+          </tbody>
+        </table>
+
+        <h3>Alert v2 Schema</h3>
+        <p>The Databricks Alert v2 API schema differs significantly from other resources, and the mistakes are easy to make:</p>
+        <table>
+          <thead><tr><th>Mistake</th><th>Correct form</th></tr></thead>
+          <tbody>
+            <tr><td>Using <code>condition:</code> key</td><td>Use <code>evaluation:</code></td></tr>
+            <tr><td><code>subscriptions:</code> at alert level</td><td>Move under <code>evaluation.notification.subscriptions</code></td></tr>
+            <tr><td><code>schedule.cron_schedule:</code></td><td>Use <code>schedule.quartz_cron_schedule:</code></td></tr>
+            <tr><td>Missing <code>schedule.pause_status</code></td><td>Required field — add <code>PAUSED</code> or <code>UNPAUSED</code></td></tr>
+          </tbody>
+        </table>
+        <p>These are all surfaced as errors with a description of the correct form — not just a generic "invalid field" message.</p>
+
+        <h3>Permission Level Checks</h3>
+        <p>Different resource types use different permission level sets — a common source of deploy failures:</p>
+        <ul>
+          <li><strong>Jobs</strong>: <code>CAN_VIEW</code>, <code>CAN_MANAGE_RUN</code>, <code>CAN_MANAGE</code></li>
+          <li><strong>Dashboards / Alerts</strong>: <code>CAN_READ</code>, <code>CAN_RUN</code>, <code>CAN_EDIT</code>, <code>CAN_MANAGE</code></li>
+          <li><strong>Volumes</strong>: use <code>grants:</code> not <code>permissions:</code> — CatalystOps errors if <code>permissions:</code> is found on a volume resource</li>
+        </ul>
+
+        <h3>Mutual Exclusion and Cluster Checks</h3>
+        <p>CatalystOps also catches configuration conflicts that the Databricks CLI only reports at validate time:</p>
+        <ul>
+          <li><code>schedule:</code> + <code>continuous:</code> on the same job — error</li>
+          <li><code>job_cluster_key:</code> + <code>existing_cluster_id:</code> on the same task — error</li>
+          <li><code>data_security_mode: NONE</code> when a production target exists — warning</li>
+          <li><code>spark_version</code> format validation (<code>14.3.x</code> / <code>14.3.x-scala2.12</code> pattern)</li>
+          <li><code>environments[].spec.client</code> is required — use <code>"4"</code> for current serverless</li>
+          <li>File existence checks for <code>spark_python_task.python_file</code> and local notebook paths</li>
+        </ul>
+
+        <h2>Bundle Target in Connection Wizard</h2>
+        <p>When <code>databricks.yml</code> is present and defines workspace targets, the <strong>CatalystOps: Configure Databricks Connection</strong> wizard shows a <strong>Use Bundle Target</strong> option at the top of the host selection step.</p>
+        <p>Select a target (dev / prod / staging) and the wizard pre-fills the workspace host from the YAML — no URL to type or copy from the Databricks console.</p>
+
+        <h2>MCP: list_bundle_tasks</h2>
+        <p>The new <code>list_bundle_tasks</code> MCP tool exposes bundle task metadata to Claude, GitHub Copilot, Cursor, and any MCP-compatible client:</p>
+        <pre><code>You: What tasks are defined in my bundle?
+Claude: ↳ calling list_bundle_tasks…
+        Found 3 tasks in 2 jobs:
+        - daily_etl → extract_data (spark_python_task): src/extract.py
+        - daily_etl → transform (spark_python_task): src/transform.py
+        - scoring_job → score (notebook_task): src/score.py</code></pre>
+        <p>The tool returns the bundle name, all target hosts, and the full task list with job name, task key, type, and file path. Useful for asking an AI assistant to analyze a specific bundle task by name.</p>
+
+        <h2>Getting Started</h2>
+        <ol>
+          <li>Install CatalystOps from the <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank">VS Code Marketplace</a> (v0.12.0 or later)</li>
+          <li>Open a workspace folder that contains <code>databricks.yml</code></li>
+          <li>The <strong>Bundle Tasks</strong> section appears automatically in the CatalystOps sidebar</li>
+          <li>Open <code>databricks.yml</code> — YAML linting activates immediately, no configuration needed</li>
+          <li>Run <strong>CatalystOps: Configure Databricks Connection</strong> — select <strong>Use Bundle Target</strong> to pre-fill your workspace host</li>
+        </ol>
+
+        <hr />
+
+        <!-- CTA -->
+        <div class="not-prose bg-card border border-border rounded-xl p-10 text-center">
+          <p class="text-xs text-muted mb-2">Free &amp; open source</p>
+          <h3 class="text-xl font-bold text-white mb-3">Try CatalystOps today</h3>
+          <p class="text-sm text-gray-400 mb-6">Catch PySpark performance issues before they hit production — inline, in your editor.</p>
+          <div class="flex gap-3 justify-center flex-wrap">
+            <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" class="btn-primary" target="_blank" style="min-width:260px;text-align:center">Install for VS Code</a>
+            <a href="https://github.com/lezwon/CatalystOps" class="btn-secondary" target="_blank" style="min-width:260px;text-align:center">View on GitHub</a>
+          </div>
+        </div>
+
+      </article>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-border py-7">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col items-center gap-3 text-sm text-muted sm:flex-row sm:justify-between">
+      <div class="flex items-center gap-2">
+        <img src="/icon.png" alt="" class="w-4 h-4 opacity-40" />
+        <span>© 2026 CatalystOps. All rights reserved.</span>
+      </div>
+      <div class="flex gap-6">
+        <a href="https://github.com/lezwon/CatalystOps" target="_blank" class="hover:text-white transition-colors">GitHub</a>
+        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank" class="hover:text-white transition-colors">Marketplace</a>
+        <a href="/docs/getting-started.html" class="hover:text-white transition-colors">Docs</a>
+        <a href="/blog/" class="hover:text-white transition-colors">Blog</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
