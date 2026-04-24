@@ -191,7 +191,7 @@ nav.site-nav {
   transition: background 0.15s, box-shadow 0.15s; white-space: nowrap;
 }
 .nav-cta:hover { background: var(--accent-dim); box-shadow: 0 0 18px rgba(249,115,22,0.3); }
-.nav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.nav-right { display: flex; align-items: center; gap: 12px; }
 .nav-hamburger {
   display: none; flex-direction: column; justify-content: center; gap: 5px;
   width: 36px; height: 36px; background: none; border: none; cursor: pointer; padding: 4px;
