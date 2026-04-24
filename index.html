@@ -1,28 +1,24 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CatalystOps — PySpark Optimizer · SpendOps</title>
+  <title>CatalystOps — PySpark Optimizer for Databricks</title>
   <meta name="description" content="Catch PySpark performance issues before they hit production. CatalystOps analyzes your Spark code inline, runs dry-run plans on Databricks, and surfaces real fixes — all inside VS Code." />
   <link rel="icon" type="image/png" href="icon.png" />
-
   <link rel="canonical" href="https://catalystops.dev/" />
 
-  <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://catalystops.dev/" />
-  <meta property="og:title" content="CatalystOps — PySpark Optimizer for Databricks · SpendOps" />
-  <meta property="og:description" content="Catch PySpark performance issues before they hit production. 30+ anti-pattern detectors, dry-run plan analysis on Databricks, and actionable fixes — all inside VS Code." />
+  <meta property="og:title" content="CatalystOps — PySpark Optimizer for Databricks" />
+  <meta property="og:description" content="Catch PySpark performance issues before they hit production. 30+ anti-pattern detectors, dry-run plan analysis, and actionable fixes — all inside VS Code." />
   <meta property="og:image" content="https://catalystops.dev/icon.png" />
 
-  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="CatalystOps — PySpark Optimizer for Databricks" />
   <meta name="twitter:description" content="Catch PySpark performance issues before they hit production. Free VS Code extension." />
   <meta name="twitter:image" content="https://catalystops.dev/icon.png" />
 
-  <!-- JSON-LD Structured Data -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -33,519 +29,1210 @@
     "description": "CatalystOps is a free VS Code extension that catches PySpark and Databricks performance issues inline as you type — 30+ anti-pattern detectors, dry-run plan analysis, and actionable fixes.",
     "url": "https://catalystops.dev/",
     "downloadUrl": "https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    },
-    "author": {
-      "@type": "Organization",
-      "name": "SpendOps",
-      "url": "https://catalystops.dev"
-    },
-    "keywords": "PySpark optimizer, Databricks VS Code extension, Spark anti-patterns, query plan visualization, Databricks cost optimization"
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "author": { "@type": "Organization", "name": "CatalystOps", "url": "https://catalystops.dev" }
   }
   </script>
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: '#F97316',       /* orange-500 */
-            'brand-dim': '#EA580C', /* orange-600 */
-            surface: '#0F1117',
-            card: '#161B27',
-            border: '#1E2535',
-            muted: '#6B7280',
-          },
-          fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif'],
-            mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
-          },
-        },
-      },
-    }
-  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/theme.css" />
 
   <style>
-    /* Gradient glow behind hero */
-    .hero-glow {
-      position: absolute;
-      width: 900px; height: 500px;
-      background: radial-gradient(ellipse at center, rgba(249,115,22,0.12) 0%, transparent 70%);
-      top: -80px; left: 50%; transform: translateX(-50%);
-      pointer-events: none;
+    /* ── Design tokens ── */
+    :root {
+      --bg:           #07090F;
+      --surface:      #0C1120;
+      --card:         #0F1829;
+      --border:       #1A2235;
+      --border-hi:    #263048;
+      --accent:       #F97316;
+      --accent-dim:   #C2410C;
+      --accent-glow:  rgba(249,115,22,0.15);
+      --cyan:         #22D3EE;
+      --green:        #4ADE80;
+      --red-tok:      #F87171;
+      --yellow-tok:   #FBBF24;
+      --text:         #F1F5F9;
+      --text-muted:   #64748B;
+      --text-subtle:  #1E293B;
+      --font-display: 'Syne', system-ui, sans-serif;
+      --font-body:    'Inter', system-ui, sans-serif;
+      --font-mono:    'JetBrains Mono', monospace;
     }
 
-    /* Squiggle underline on highlighted code */
-    .squiggle {
-      text-decoration: underline wavy #F97316;
-      text-decoration-thickness: 2px;
-      text-underline-offset: 3px;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
-    .squiggle-warn {
-      text-decoration: underline wavy #EAB308;
-      text-decoration-thickness: 2px;
-      text-underline-offset: 3px;
+    h1, h2, h3, h4 { font-family: var(--font-display); }
+
+    /* Subtle grid texture */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(249,115,22,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(249,115,22,0.025) 1px, transparent 1px);
+      background-size: 72px 72px;
     }
 
-    /* Feature card hover */
-    .feature-card {
-      border: 1px solid #1E2535;
-      border-radius: 12px;
-      padding: 28px;
-      background: #161B27;
-      transition: border-color 0.2s, transform 0.2s;
+    /* ── Nav ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 58px; display: flex; align-items: center;
+      background: rgba(7,9,15,0.88); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
     }
-    .feature-card:hover {
-      border-color: rgba(249,115,22,0.4);
-      transform: translateY(-2px);
+    .nav-inner {
+      max-width: 1280px; margin: 0 auto; padding: 0 28px; width: 100%;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px; text-decoration: none;
+      color: var(--text); font-family: var(--font-display); font-weight: 700;
+      font-size: 1rem; letter-spacing: -0.01em;
+    }
+    .nav-logo img { width: 26px; height: 26px; }
+    .nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+    .nav-links a {
+      color: var(--text-muted); text-decoration: none;
+      font-size: 0.8125rem; font-weight: 500; transition: color 0.15s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      font-family: var(--font-display); font-weight: 700; font-size: 0.75rem;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      background: var(--accent); color: #fff;
+      padding: 8px 18px; border-radius: 3px; text-decoration: none;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .nav-cta:hover { background: var(--accent-dim); box-shadow: 0 0 18px rgba(249,115,22,0.3); }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative; min-height: 100vh;
+      display: grid; grid-template-columns: 480px 1fr;
+      padding-top: 58px; overflow: hidden;
     }
 
-    /* Step connector */
-    .step-line { background: linear-gradient(to bottom, #F97316, transparent); }
-
-    /* Diagnostic tooltip */
-    .diag-tooltip {
-      background: #1C2333;
-      border: 1px solid #2D3748;
-      border-radius: 8px;
-      padding: 12px 16px;
-      font-size: 0.8rem;
-      color: #CBD5E0;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-    }
-    .diag-tooltip .rule-id {
-      color: #F97316; font-weight: 600; font-size: 0.75rem;
+    .hero-left {
+      position: relative; z-index: 1;
+      padding: 80px 40px 80px 28px;
+      display: flex; flex-direction: column; justify-content: center;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
     }
 
+    .hero-eyebrow {
+      font-family: var(--font-mono); font-size: 0.68rem; font-weight: 500;
+      color: var(--accent); letter-spacing: 0.14em; text-transform: uppercase;
+      margin-bottom: 28px; display: flex; align-items: center; gap: 10px;
+    }
+    .hero-eyebrow::before {
+      content: ''; display: inline-block; width: 28px; height: 1px; background: var(--accent);
+    }
+
+    h1.hero-title {
+      font-size: clamp(2.6rem, 4.5vw, 4rem); font-weight: 800;
+      line-height: 1.0; letter-spacing: -0.045em; color: var(--text);
+      margin-bottom: 24px;
+    }
+    .hero-title em { font-style: normal; color: var(--accent); }
+
+    .hero-body {
+      font-size: 0.9375rem; color: var(--text-muted); line-height: 1.8;
+      margin-bottom: 40px; max-width: 380px;
+    }
+
+    .hero-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+    .btn-primary {
+      font-family: var(--font-display); font-weight: 700; font-size: 0.8125rem;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      background: var(--accent); color: #fff;
+      padding: 13px 28px; border-radius: 3px; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .btn-primary:hover { background: var(--accent-dim); box-shadow: 0 0 24px rgba(249,115,22,0.35); }
+
+    .btn-outline {
+      font-family: var(--font-display); font-weight: 600; font-size: 0.8125rem;
+      color: var(--text-muted); text-decoration: none;
+      border: 1px solid var(--border-hi); padding: 12px 24px; border-radius: 3px;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .btn-outline:hover { color: var(--text); border-color: var(--text-muted); }
+
+    .hero-meta {
+      margin-top: 40px; padding-top: 28px; border-top: 1px solid var(--border);
+      font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted);
+      display: flex; gap: 24px;
+    }
+    .hero-meta span { display: flex; align-items: center; gap: 6px; }
+    .hero-meta .dot-green { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+    /* IDE panel */
+    .hero-ide {
+      background: #0A0E1A; display: flex; flex-direction: column;
+      border-left: 1px solid var(--border); overflow: hidden;
+      min-height: calc(100vh - 58px);
+    }
+
+    .ide-bar {
+      height: 36px; background: #070A12; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 16px; gap: 6px;
+      flex-shrink: 0;
+    }
+    .ide-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    .ide-tabs {
+      height: 34px; background: #0A0E1A; border-bottom: 1px solid var(--border);
+      display: flex; align-items: stretch; flex-shrink: 0;
+    }
+    .ide-tab {
+      padding: 0 18px; display: flex; align-items: center;
+      font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);
+      border-right: 1px solid var(--border); white-space: nowrap; cursor: default;
+    }
+    .ide-tab.active { background: #0C1120; color: var(--text); border-bottom: 1.5px solid var(--accent); }
+
+    /* Split IDE body: code | claude chat */
+    .ide-split {
+      display: flex; flex: 1; overflow: hidden; min-height: 0;
+    }
+    .ide-code-half {
+      flex: 0 0 58%; display: flex; overflow: hidden;
+      border-right: 1px solid var(--border);
+      font-family: var(--font-mono); font-size: 1rem; line-height: 1.9;
+    }
+    .ide-gutter {
+      background: #0A0E1A; padding: 14px 8px 14px 0;
+      text-align: right; color: #2A3A52; border-right: 1px solid var(--border);
+      user-select: none; overflow: hidden; flex-shrink: 0; min-width: 36px;
+      font-size: 1rem;
+    }
+    .ide-gutter span { display: block; }
+    .ide-code-area {
+      background: #0C1120; padding: 14px 20px; overflow: hidden; flex: 1;
+    }
+    .cl { display: block; white-space: pre; }
+
+    /* Claude chat half */
+    .ide-chat-half {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+      background: #080E1A;
+      font-family: var(--font-body); font-size: 0.75rem;
+    }
+    .chat-half-header {
+      height: 36px; background: #050A14; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 12px; gap: 6px;
+      font-size: 0.85rem; color: var(--text-muted); flex-shrink: 0;
+    }
+    .chat-half-online {
+      width: 5px; height: 5px; border-radius: 50%; background: var(--green);
+    }
+    .chat-half-msgs {
+      flex: 1; overflow-y: auto; padding: 10px; display: flex;
+      flex-direction: column; gap: 6px; scrollbar-width: none;
+    }
+    .chat-half-msgs::-webkit-scrollbar { display: none; }
+    .chat-half-input {
+      height: 42px; border-top: 1px solid var(--border); background: #050A14;
+      padding: 0 12px; display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .chat-input-text {
+      font-size: 1rem; color: var(--text); flex: 1;
+      white-space: nowrap; overflow: hidden;
+    }
+    .chat-input-cursor {
+      width: 1px; height: 0.8em; background: var(--accent);
+      animation: blink 1s step-end infinite; flex-shrink: 0;
+    }
+
+    /* Chat message types */
+    .cm-user {
+      align-self: flex-end; background: rgba(249,115,22,0.07);
+      border: 1px solid rgba(249,115,22,0.15); border-radius: 8px 8px 2px 8px;
+      padding: 9px 13px; font-size: 1rem; color: var(--text); max-width: 92%;
+    }
+    .cm-tool {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 1rem; color: var(--text-muted); padding: 5px 2px;
+    }
+    .cm-spinner {
+      width: 9px; height: 9px; border: 1.5px solid rgba(249,115,22,0.25);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin 0.7s linear infinite; flex-shrink: 0;
+    }
+    .cm-done {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--green); flex-shrink: 0;
+    }
+    .cm-claude {
+      background: #0C1829; border: 1px solid var(--border);
+      border-radius: 2px 8px 8px 8px; padding: 9px 11px;
+      font-size: 1rem; color: var(--text-muted); line-height: 1.75; max-width: 100%;
+    }
+    .cm-plan-row {
+      padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 0.95rem; line-height: 1.6;
+    }
+    .cm-plan-row:last-child { border-bottom: none; }
+    .cm-appear { animation: fadeUp 0.2s ease forwards; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Status bar */
+    .ide-statusbar {
+      height: 20px; background: #030509; border-top: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 10px; gap: 14px;
+      font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .s-err { color: var(--red-tok); display:flex;align-items:center;gap:3px; }
+    .s-warn { color: var(--yellow-tok); display:flex;align-items:center;gap:3px; }
+    .s-ok { color: var(--green); display:flex;align-items:center;gap:3px; }
+
+    /* Line-fixed flash */
+    @keyframes lineFlash { 0%{background:rgba(74,222,128,0.18)} 100%{background:rgba(74,222,128,0.03)} }
+    .line-updated { animation: lineFlash 1.4s ease forwards; }
+
+    /* Code token colors */
+    .kw  { color: #C792EA; }
+    .fn  { color: #82AAFF; }
+    .str { color: #C3E88D; }
+    .cmt { color: #3D5068; font-style: italic; }
+    .method { color: #89DDFF; }
+    .cls { color: #FFCB6B; }
+    .err-tok { color: #F87171; text-decoration: underline wavy #F87171; text-decoration-thickness: 1.5px; text-underline-offset: 2px; }
+    .warn-tok { color: #FBBF24; text-decoration: underline wavy #FBBF24; text-decoration-thickness: 1.5px; text-underline-offset: 2px; }
+    .var { color: #EEFFFF; }
+    .punc { color: #89DDFF; }
+
+    /* Cursor blink */
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    .cursor {
+      display: inline-block; width: 1.5px; height: 0.9em;
+      background: var(--accent); animation: blink 1.1s step-end infinite;
+      vertical-align: middle; margin-left: 1px;
+    }
+
+    /* ── Stats ── */
+    .stats-strip {
+      position: relative; z-index: 1;
+      border-bottom: 1px solid var(--border);
+      display: grid; grid-template-columns: repeat(4, 1fr);
+    }
+    .stat-cell {
+      padding: 48px 36px; border-right: 1px solid var(--border);
+    }
+    .stat-cell:last-child { border-right: none; }
+    .stat-num {
+      font-family: var(--font-display); font-size: clamp(2.8rem, 4vw, 3.8rem);
+      font-weight: 800; letter-spacing: -0.06em; line-height: 1;
+      color: var(--text); margin-bottom: 10px;
+    }
+    .stat-num sup { font-size: 0.45em; vertical-align: super; letter-spacing: 0; color: var(--accent); }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; max-width: 160px; }
+
+    /* ── Features bento ── */
+    .features { position: relative; z-index: 1; padding: 112px 0; }
+
+    .sec-header { max-width: 1280px; margin: 0 auto; padding: 0 28px 56px; }
+    .sec-label {
+      font-family: var(--font-mono); font-size: 0.68rem; color: var(--accent);
+      letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 18px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sec-label::before { content:''; display:inline-block; width:20px; height:1px; background:var(--accent); }
+
+    h2.sec-title {
+      font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 800;
+      letter-spacing: -0.04em; line-height: 1.1; max-width: 520px;
+    }
+    .sec-sub { font-size: 0.9375rem; color: var(--text-muted); margin-top: 14px; max-width: 440px; line-height: 1.7; }
+
+    .bento {
+      max-width: 1280px; margin: 0 auto; padding: 0 28px;
+      display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px;
+    }
+
+    .b-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+      padding: 28px; position: relative; overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .b-card:hover { border-color: var(--border-hi); }
+
+    .b-card.c8  { grid-column: span 8; }
+    .b-card.c4  { grid-column: span 4; }
+    .b-card.c5  { grid-column: span 5; }
+    .b-card.c7  { grid-column: span 7; }
+    .b-card.c6  { grid-column: span 6; }
+    .b-card.c12 { grid-column: span 12; }
+
+    .b-card.accent-top::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 1.5px; background: linear-gradient(90deg, var(--accent) 0%, transparent 60%);
+    }
+
+    .b-tag {
+      font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--accent);
+      background: rgba(249,115,22,0.07); border: 1px solid rgba(249,115,22,0.15);
+      padding: 3px 8px; border-radius: 2px; display: inline-block; margin-bottom: 18px;
+    }
+    .b-icon {
+      width: 32px; height: 32px; border-radius: 5px;
+      background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.15);
+      display: flex; align-items: center; justify-content: center; margin-bottom: 18px;
+    }
+    .b-card h3 {
+      font-size: 1.05rem; font-weight: 700; letter-spacing: -0.02em;
+      margin-bottom: 10px; color: var(--text);
+    }
+    .b-card p { font-size: 0.8375rem; color: var(--text-muted); line-height: 1.75; }
+    .b-card code {
+      font-family: var(--font-mono); font-size: 0.75em;
+      background: rgba(249,115,22,0.08); color: var(--accent);
+      padding: 1px 5px; border-radius: 2px;
+    }
+
+    /* Large number ghost in feature card */
+    .b-ghost-num {
+      font-family: var(--font-display); font-size: 5rem; font-weight: 800;
+      color: rgba(249,115,22,0.04); line-height: 1; position: absolute;
+      right: 20px; bottom: 10px; letter-spacing: -0.06em; pointer-events: none;
+    }
+
+    /* Mini rule list in bento */
+    .rule-list { list-style: none; margin-top: 16px; display: flex; flex-direction: column; gap: 6px; }
+    .rule-list li {
+      font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .rule-list li::before { content: ''; display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+    .rule-list .rule-id { color: var(--accent); flex-shrink: 0; min-width: 110px; }
+    .rule-list .rule-name { color: var(--text-muted); }
+
+    /* ── How it works ── */
+    .how { position: relative; z-index: 1; border-top: 1px solid var(--border); padding: 112px 0; }
+
+    .steps {
+      max-width: 1280px; margin: 0 auto; padding: 0 28px;
+      display: grid; grid-template-columns: repeat(3, 1fr);
+    }
+
+    .step {
+      padding: 48px 36px; border-right: 1px solid var(--border); position: relative;
+    }
+    .step:last-child { border-right: none; }
+
+    .step-ghost {
+      font-family: var(--font-display); font-size: 6rem; font-weight: 800;
+      color: rgba(249,115,22,0.05); line-height: 1; letter-spacing: -0.06em;
+      margin-bottom: 4px;
+    }
+    .step-label {
+      font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
+    }
+    .step h3 {
+      font-size: 1.15rem; font-weight: 700; letter-spacing: -0.025em;
+      margin-bottom: 14px; color: var(--text);
+    }
+    .step p { font-size: 0.8375rem; color: var(--text-muted); line-height: 1.8; }
+    .step code {
+      font-family: var(--font-mono); font-size: 0.8em;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--accent); padding: 2px 6px; border-radius: 2px;
+    }
+    .step kbd {
+      font-family: var(--font-mono); font-size: 0.8em;
+      background: var(--surface); border: 1px solid var(--border-hi);
+      color: var(--text); padding: 2px 7px; border-radius: 3px;
+    }
+
+    /* ── MCP ── */
+    .mcp { position: relative; z-index: 1; border-top: 1px solid var(--border); }
+
+    .mcp-inner {
+      max-width: 1280px; margin: 0 auto; padding: 112px 28px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start;
+    }
+
+    .mcp-tools { margin-top: 32px; }
+    .mcp-tool {
+      display: grid; grid-template-columns: 180px 1fr;
+      align-items: baseline; gap: 16px;
+      padding: 11px 0; border-bottom: 1px solid var(--border);
+    }
+    .mcp-tool:last-child { border-bottom: none; }
+    .tool-name { font-family: var(--font-mono); font-size: 0.72rem; color: var(--cyan); }
+    .tool-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+
+    .chat-window {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+    }
+    .chat-top {
+      background: var(--card); padding: 11px 16px; border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .chat-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+    .chat-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+    .msg-user {
+      align-self: flex-end; background: rgba(249,115,22,0.08);
+      border: 1px solid rgba(249,115,22,0.18); border-radius: 8px 8px 2px 8px;
+      padding: 10px 14px; font-size: 0.9rem; max-width: 86%; color: var(--text);
+    }
+    .msg-bot { align-self: flex-start; max-width: 92%; }
+    .msg-bot-from {
+      font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); margin-bottom: 5px;
+    }
+    .msg-bot-tool {
+      font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);
+      margin-bottom: 6px; font-style: italic;
+    }
+    .msg-bot-bubble {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 2px 8px 8px 8px; padding: 11px 14px;
+      font-size: 0.9rem; color: var(--text-muted); line-height: 1.7;
+    }
+    .msg-bot-bubble .c-r { color: #F87171; }
+    .msg-bot-bubble .c-y { color: #FBBF24; }
+    .msg-bot-bubble .c-b { color: var(--cyan); }
+    .msg-bot-bubble .c-w { color: var(--text); }
+
+    /* ── CTA ── */
+    .cta {
+      position: relative; z-index: 1; border-top: 1px solid var(--border);
+      padding: 120px 28px; overflow: hidden;
+    }
+    .cta::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse 900px 500px at 50% 110%, rgba(249,115,22,0.055), transparent);
+    }
+    .cta-inner { position: relative; max-width: 720px; margin: 0 auto; text-align: center; }
+
+    h2.cta-title {
+      font-size: clamp(2.4rem, 5vw, 4rem); font-weight: 800;
+      letter-spacing: -0.05em; line-height: 1.0; margin-bottom: 22px;
+    }
+    .cta-sub { font-size: 0.9375rem; color: var(--text-muted); margin-bottom: 40px; line-height: 1.7; }
+    .cta-actions { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
+    .cta-note { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); margin-top: 24px; }
+
+    /* ── Footer ── */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border); padding: 28px;
+    }
+    .footer-inner {
+      max-width: 1280px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .footer-brand {
+      display: flex; align-items: center; gap: 8px; text-decoration: none;
+      font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);
+    }
+    .footer-brand img { width: 18px; height: 18px; opacity: 0.4; }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a {
+      font-size: 0.78rem; color: var(--text-muted);
+      text-decoration: none; transition: color 0.15s;
+    }
+    .footer-links a:hover { color: var(--text); }
+
+    /* ── Responsive ── */
+    @media (max-width: 1100px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-ide { display: none; }
+      .hero-left { padding: 80px 28px 64px; max-width: 100%; border-right: none; }
+      .stats-strip { grid-template-columns: repeat(2, 1fr); }
+      .stat-cell:nth-child(2) { border-right: none; }
+      .stat-cell:nth-child(3) { border-right: 1px solid var(--border); }
+      .stat-cell:last-child { border-right: none; }
+      .bento { grid-template-columns: 1fr; }
+      .b-card.c8,.b-card.c4,.b-card.c5,.b-card.c7,.b-card.c6,.b-card.c12 { grid-column: span 1; }
+      .steps { grid-template-columns: 1fr; }
+      .step { border-right: none; border-bottom: 1px solid var(--border); }
+      .step:last-child { border-bottom: none; }
+      .mcp-inner { grid-template-columns: 1fr; gap: 48px; }
+    }
+    @media (max-width: 640px) {
+      .stats-strip { grid-template-columns: 1fr; }
+      .stat-cell { border-right: none; border-bottom: 1px solid var(--border); }
+      .nav-links { display: none; }
+      .hero-actions { flex-direction: column; align-items: flex-start; }
+      .cta-actions { flex-direction: column; align-items: stretch; }
+      .footer-inner { flex-direction: column; gap: 20px; }
+      .mcp-tool { grid-template-columns: 1fr; gap: 4px; }
+    }
   </style>
 </head>
-<body class="text-gray-100 font-sans antialiased">
+<body>
 
-  <!-- ── Nav ──────────────────────────────────────────────────────────────── -->
-  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-border bg-surface/80 backdrop-blur-md">
-    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-2.5">
-        <a href="#" class="flex items-center gap-2.5">
-          <img src="icon.png" alt="CatalystOps" class="w-7 h-7" />
-          <span class="font-bold text-lg tracking-tight">CatalystOps</span>
-        </a>
-      </div>
-      <div class="hidden md:flex items-center gap-8 text-sm text-gray-400">
-        <a href="#features" class="nav-link hover:text-white transition-colors">Features</a>
-        <a href="#how-it-works" class="nav-link hover:text-white transition-colors">How it works</a>
-        <a href="#mcp" class="nav-link hover:text-white transition-colors">MCP</a>
-        <a href="/docs/getting-started.html" class="nav-link hover:text-white transition-colors">Docs</a>
-        <a href="/blog/" class="nav-link hover:text-white transition-colors">Blog</a>
-      </div>
+<!-- ── Nav ─────────────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="icon.png" alt="CatalystOps icon" />
+      CatalystOps
+    </a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how-it-works">How it works</a></li>
+      <li><a href="#mcp">MCP</a></li>
+      <li><a href="/docs/getting-started.html">Docs</a></li>
+      <li><a href="/blog/">Blog</a></li>
+    </ul>
+    <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
+       target="_blank" rel="noopener" class="nav-cta">Install Free</a>
+  </div>
+</nav>
+
+<!-- ── Hero ─────────────────────────────────────────────────────────── -->
+<section class="hero">
+
+  <div class="hero-left">
+    <p class="hero-eyebrow">VS Code Extension · v0.12.0</p>
+
+    <h1 class="hero-title">
+      Stop paying for<br />
+      <em>bad Spark</em><br />
+      at runtime
+    </h1>
+
+    <p class="hero-body">
+      CatalystOps catches PySpark anti-patterns inline as you write them —
+      30+ rules, dry-run plan analysis on Databricks, and cost attribution.
+      No context switching. No cluster needed.
+    </p>
+
+    <div class="hero-actions">
       <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
-         target="_blank"
-         class="btn-nav">
-        Install Free
+         target="_blank" rel="noopener" class="btn-primary">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Install for VS Code
+      </a>
+      <a href="https://github.com/lezwon/CatalystOps" target="_blank" rel="noopener" class="btn-outline">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.11.82-.26.82-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.54-1.38-1.33-1.75-1.33-1.75-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.49 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 013-.4c1.02.01 2.04.14 3 .4 2.28-1.55 3.29-1.23 3.29-1.23.66 1.66.25 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.21.7.82.58C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+        View on GitHub
       </a>
     </div>
-  </nav>
 
-  <!-- ── Hero ─────────────────────────────────────────────────────────────── -->
-  <section class="relative pt-36 pb-24 px-6 text-center overflow-hidden">
-    <div class="hero-glow"></div>
-
-    <div class="relative max-w-4xl mx-auto">
-      <div class="badge mb-6">
-        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-        VS Code Extension · v0.11.0
-      </div>
-
-      <h1 class="text-5xl md:text-6xl font-extrabold leading-tight mb-6">
-        <span class="gradient-text">Catch Spark performance</span><br />
-        issues before production
-      </h1>
-
-      <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-        CatalystOps analyzes your PySpark and Databricks code inline as you type —
-        30+ anti-pattern detectors, dry-run plan analysis on your cluster,
-        and actionable fixes. No context switching.
-      </p>
-
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
-           target="_blank" class="btn-primary" style="min-width:260px;text-align:center">
-          Install for VS Code
-        </a>
-        <a href="https://github.com/lezwon/CatalystOps" target="_blank" class="btn-secondary" style="min-width:260px;text-align:center">
-          View on GitHub
-        </a>
-      </div>
-
-      <!-- Hero code window -->
-      <div class="code-window mt-16 text-left mx-auto max-w-3xl shadow-2xl">
-        <div class="code-titlebar">
-          <div class="dot bg-red-500"></div>
-          <div class="dot bg-yellow-500"></div>
-          <div class="dot bg-green-500"></div>
-          <span class="ml-3 text-xs text-gray-500 font-mono">pipeline.py</span>
-        </div>
-        <div class="p-6 font-mono text-sm leading-relaxed overflow-x-auto">
-          <div class="text-gray-500 mb-4 text-xs">1  <span class="text-blue-400">from</span> <span class="text-green-400">pyspark.sql</span> <span class="text-blue-400">import</span> functions as F</div>
-          <div class="text-gray-500 text-xs">2</div>
-          <div class="text-gray-500 text-xs mt-1">3  events = spark.read.parquet(<span class="text-amber-400">"s3://bucket/events/"</span>)</div>
-          <div class="text-gray-500 text-xs mt-1 flex items-start gap-2">
-            <span>4  </span>
-            <span>
-              daily = events.groupBy(<span class="text-amber-400">"date"</span>).<span class="text-red-400 squiggle">count()</span>
-              <span class="ml-2 text-xs text-red-400">← count() triggers full scan</span>
-            </span>
-          </div>
-          <div class="text-gray-500 text-xs mt-1 flex items-start gap-2">
-            <span>5  </span>
-            <span>
-              hourly = events.<span class="text-yellow-400 squiggle-warn">collect()</span>
-              <span class="ml-2 text-xs text-yellow-400">← OOM risk on large datasets</span>
-            </span>
-          </div>
-          <div class="text-gray-500 text-xs mt-1">6</div>
-          <div class="text-gray-500 text-xs mt-1">7  result = daily.join(F.broadcast(small_df), <span class="text-amber-400">"date"</span>)</div>
-
-          <!-- Diagnostic tooltip -->
-          <div class="diag-tooltip mt-6 max-w-sm">
-            <div class="rule-id mb-1">CODE_COUNT_001 · Warning</div>
-            <div class="text-gray-300 font-sans text-xs leading-relaxed">
-              <strong>count() &gt; 0</strong> triggers a full Spark job just to check emptiness.
-              Use <code class="bg-surface px-1 rounded text-orange-400">df.isEmpty()</code> instead —
-              it short-circuits on the first partition.
-            </div>
-            <div class="mt-3 pt-3 border-t border-border">
-              <div class="text-gray-500 text-xs mb-1">Quick fix</div>
-              <code class="text-green-400 text-xs">if not df.isEmpty(): ...</code>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Stats bar ─────────────────────────────────────────────────────────── -->
-  <div class="border-y border-border py-8 px-6">
-    <div class="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-      <div>
-        <div class="text-3xl font-extrabold text-white">30+</div>
-        <div class="text-sm text-muted mt-1">Anti-pattern rules</div>
-      </div>
-      <div>
-        <div class="text-3xl font-extrabold text-white">0</div>
-        <div class="text-sm text-muted mt-1">Cluster needed for local analysis</div>
-      </div>
-      <div>
-        <div class="text-3xl font-extrabold text-white">2</div>
-        <div class="text-sm text-muted mt-1">Execution modes — cluster & serverless</div>
-      </div>
-      <div>
-        <div class="text-3xl font-extrabold text-white">Free</div>
-        <div class="text-sm text-muted mt-1">Elastic License 2.0</div>
-      </div>
+    <div class="hero-meta">
+      <span><span class="dot-green"></span>Free &amp; open source</span>
+      <span>Elastic License 2.0</span>
+      <span>VS Code 1.85+</span>
     </div>
   </div>
 
-  <!-- ── Features ─────────────────────────────────────────────────────────── -->
-  <section id="features" class="py-24 px-6">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center mb-16">
-        <div class="badge mb-4">Features</div>
-        <h2 class="text-4xl font-bold">Everything in one place</h2>
-        <p class="text-gray-400 mt-4 max-w-xl mx-auto">
-          From static code analysis to live Databricks plan inspection — without leaving the editor.
-        </p>
-      </div>
-
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-        <!-- Feature 1 -->
-        <div class="feature-card">
-          <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center mb-5">
-            <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-            </svg>
-          </div>
-          <h3 class="font-semibold text-white mb-2">Local Static Analysis</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">
-            Detects 30+ PySpark and Databricks anti-patterns inline as you type.
-            No cluster required. Catches collect(), UDFs, cross joins, unsafe writes,
-            SQL injection, schema drift, and more.
-          </p>
-        </div>
-
-        <!-- Feature 2 -->
-        <div class="feature-card">
-          <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center mb-5">
-            <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-            </svg>
-          </div>
-          <h3 class="font-semibold text-white mb-2">Dry-Run Plan Analysis</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">
-            Submits a neutralized version of your script to Databricks (cluster or Serverless)
-            and returns the physical Catalyst plan — with sort-merge join detection,
-            broadcast thresholds, shuffle analysis, and cost estimation.
-          </p>
-        </div>
-
-        <!-- Feature 3 -->
-        <div class="feature-card">
-          <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center mb-5">
-            <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-            </svg>
-          </div>
-          <h3 class="font-semibold text-white mb-2">Job Run Analysis</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">
-            Analyze any past Databricks job run from the Jobs sidebar — no re-execution needed.
-            CatalystOps reads the Spark event log from DBFS, extracts physical plans, and opens
-            an interactive DAG showing operator trees, filter conditions, and issue badges.
-          </p>
-        </div>
-
-        <!-- Feature 4 -->
-        <div class="feature-card">
-          <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center mb-5">
-            <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-          </div>
-          <h3 class="font-semibold text-white mb-2">One-Click SSH to Clusters</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">
-            The Clusters panel lists every interactive cluster in your workspace.
-            Click SSH on any cluster — CatalystOps starts it if stopped, runs setup automatically,
-            and opens VS Code Remote SSH directly on the driver. No terminal commands needed.
-          </p>
-        </div>
-
-        <!-- Feature 5 -->
-        <div class="feature-card">
-          <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center mb-5">
-            <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
-          <h3 class="font-semibold text-white mb-2">Billing Dashboard</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">
-            Tracks DBU and dollar spend per period directly from
-            <code class="bg-surface text-orange-400 px-1 rounded text-xs">system.billing.usage</code>
-            with a 1-hour cache. After each serverless run, optionally fetches actual DBU consumption.
-          </p>
-        </div>
-
-        <!-- Feature 6 -->
-        <div class="feature-card">
-          <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center mb-5">
-            <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-          </div>
-          <h3 class="font-semibold text-white mb-2">MCP Server</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">
-            Exposes a Streamable HTTP MCP server auto-discovered by VS Code 1.99+.
-            Lets Claude and other AI tools analyze your PySpark code, fetch billing summaries,
-            and run dry runs through natural language.
-          </p>
-        </div>
-
-      </div>
+  <!-- Live IDE demo panel -->
+  <div class="hero-ide">
+    <div class="ide-bar">
+      <div class="ide-dot" style="background:#FF5F57"></div>
+      <div class="ide-dot" style="background:#FFBD2E"></div>
+      <div class="ide-dot" style="background:#28C840"></div>
+      <span style="margin-left:10px;font-family:var(--font-mono);font-size:0.58rem;color:var(--text-muted)">pipeline.py</span>
     </div>
-  </section>
+    <div class="ide-tabs">
+      <div class="ide-tab active">pipeline.py</div>
+      <div class="ide-tab" id="claude-tab">⚡ CLAUDE</div>
+      <div class="ide-tab">etl_jobs.py</div>
+    </div>
 
-  <!-- ── How it works ──────────────────────────────────────────────────────── -->
-  <section id="how-it-works" class="py-24 px-6 border-t border-border">
-    <div class="max-w-4xl mx-auto">
-      <div class="text-center mb-16">
-        <div class="badge mb-4">How it works</div>
-        <h2 class="text-4xl font-bold">From install to insight in minutes</h2>
+    <div class="ide-split">
+      <!-- Code editor side -->
+      <div class="ide-code-half">
+        <div class="ide-gutter">
+          <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+          <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+          <span>11</span><span>12</span><span>13</span><span>14</span><span>15</span>
+          <span>16</span><span>17</span><span>18</span>
+        </div>
+        <div class="ide-code-area">
+          <div class="cl"><span class="kw">from</span> <span class="fn">pyspark.sql</span> <span class="kw">import</span> <span class="var">SparkSession</span><span class="punc">,</span> <span class="var">functions</span> <span class="kw">as</span> <span class="var">F</span></div>
+          <div class="cl"><span class="kw">from</span> <span class="fn">pyspark.sql.types</span> <span class="kw">import</span> <span class="var">StructType</span></div>
+          <div class="cl"> </div>
+          <div class="cl"><span class="var">spark</span> <span class="punc">=</span> <span class="cls">SparkSession</span><span class="punc">.</span><span class="method">builder</span><span class="punc">.</span><span class="method">getOrCreate</span><span class="punc">()</span></div>
+          <div class="cl"> </div>
+          <div class="cl"><span class="cmt"># Load tables from S3</span></div>
+          <div class="cl"><span class="var">events</span> <span class="punc">=</span> <span class="var">spark</span><span class="punc">.</span><span class="method">read</span><span class="punc">.</span><span class="method">parquet</span><span class="punc">(</span><span class="str">"s3://prod/events/"</span><span class="punc">)</span></div>
+          <div class="cl"><span class="var">lookup</span> <span class="punc">=</span> <span class="var">spark</span><span class="punc">.</span><span class="method">read</span><span class="punc">.</span><span class="method">parquet</span><span class="punc">(</span><span class="str">"s3://prod/lookup/"</span><span class="punc">)</span></div>
+          <!-- Line 9: dynamically typed by JS -->
+          <div class="cl" id="cl-9"><span style="color:var(--accent);animation:blink 1s step-end infinite">▌</span></div>
+          <div class="cl"><span class="var">daily</span> <span class="punc">=</span> <span class="var">events</span><span class="punc">.</span><span class="method">groupBy</span><span class="punc">(</span><span class="str">"date"</span><span class="punc">)</span><span class="punc">.</span><span class="method">agg</span><span class="punc">(</span><span class="fn">F</span><span class="punc">.</span><span class="method">count</span><span class="punc">(</span><span class="str">"*"</span><span class="punc">))</span></div>
+          <div class="cl"> </div>
+          <!-- Line 12: join — changes during fix -->
+          <div class="cl" id="cl-12"><span class="var">result</span> <span class="punc">=</span> <span class="var">daily</span><span class="punc">.</span><span class="method">join</span><span class="punc">(</span><span class="var">lookup</span><span class="punc">,</span> <span class="str">"date"</span><span class="punc">)</span></div>
+          <div class="cl"> </div>
+          <!-- Line 14: sort — changes during fix -->
+          <div class="cl" id="cl-14"><span class="var">sorted_df</span> <span class="punc">=</span> <span class="var">result</span><span class="punc">.</span><span class="err-tok">orderBy</span><span class="punc">(</span><span class="str">"date"</span><span class="punc">)</span></div>
+          <div class="cl"> </div>
+          <div class="cl"><span class="var">sorted_df</span><span class="punc">.</span><span class="method">write</span><span class="punc">.</span><span class="method">mode</span><span class="punc">(</span><span class="str">"overwrite"</span><span class="punc">)</span><span class="punc">.</span><span class="method">parquet</span><span class="punc">(</span><span class="str">"s3://out/"</span><span class="punc">)</span></div>
+          <div class="cl"> </div>
+          <div class="cl"> </div>
+        </div>
       </div>
 
-      <div class="space-y-12">
-        <!-- Step 1 -->
-        <div class="flex gap-8 items-start">
-          <div class="flex-none">
-            <div class="w-12 h-12 rounded-full bg-brand/10 border border-brand/30 flex items-center justify-center text-brand font-bold text-lg">1</div>
-          </div>
-          <div class="pt-2">
-            <h3 class="text-xl font-semibold text-white mb-2">Install &amp; open a Python file</h3>
-            <p class="text-gray-400 leading-relaxed">
-              Install from the VS Code Marketplace. The moment you open a
-              <code class="bg-card border border-border text-orange-400 px-1.5 py-0.5 rounded text-sm">.py</code>
-              file, local analysis kicks in — no configuration needed.
-              30+ rules light up immediately for any PySpark anti-patterns.
-            </p>
-          </div>
+      <!-- Claude AI chat side -->
+      <div class="ide-chat-half">
+        <div class="chat-half-header">
+          <span class="chat-half-online"></span>
+          CLAUDE · CatalystOps MCP
         </div>
-
-        <!-- Step 2 -->
-        <div class="flex gap-8 items-start">
-          <div class="flex-none">
-            <div class="w-12 h-12 rounded-full bg-brand/10 border border-brand/30 flex items-center justify-center text-brand font-bold text-lg">2</div>
-          </div>
-          <div class="pt-2">
-            <h3 class="text-xl font-semibold text-white mb-2">Connect to Databricks (optional)</h3>
-            <p class="text-gray-400 leading-relaxed">
-              Run <em>CatalystOps: Configure Databricks Connection</em> from the Command Palette.
-              The wizard detects what&#39;s on your machine — Azure CLI, GCP ADC,
-              <code class="bg-card border border-border text-orange-400 px-1.5 py-0.5 rounded text-sm">~/.databrickscfg</code>,
-              OAuth browser login, or a personal access token — and shows only those options.
-            </p>
-          </div>
-        </div>
-
-        <!-- Step 3 -->
-        <div class="flex gap-8 items-start">
-          <div class="flex-none">
-            <div class="w-12 h-12 rounded-full bg-brand/10 border border-brand/30 flex items-center justify-center text-brand font-bold text-lg">3</div>
-          </div>
-          <div class="pt-2">
-            <h3 class="text-xl font-semibold text-white mb-2">Run a dry-run analysis</h3>
-            <p class="text-gray-400 leading-relaxed">
-              Press
-              <kbd class="bg-card border border-border text-gray-300 px-2 py-0.5 rounded text-sm font-mono">⌘⇧K</kbd>
-              to submit the current file. CatalystOps neutralizes side-effects,
-              executes the Catalyst planner on your cluster, and returns the physical plan
-              with cost annotations, join strategies, and actionable fixes — all in the sidebar.
-            </p>
-          </div>
+        <div class="chat-half-msgs" id="chat-msgs"></div>
+        <div class="chat-half-input">
+          <svg width="11" height="11" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" stroke-width="2" style="flex-shrink:0">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+          <span class="chat-input-text" id="chat-input-text"><em style="color:var(--text-muted)">ask Claude anything…</em></span>
+          <span class="chat-input-cursor" id="chat-cursor" style="display:none"></span>
         </div>
       </div>
     </div>
-  </section>
 
-  <!-- ── MCP section ───────────────────────────────────────────────────────── -->
-  <section id="mcp" class="py-24 px-6 border-t border-border">
-    <div class="max-w-6xl mx-auto">
-      <div class="grid lg:grid-cols-2 gap-16 items-center">
-        <div>
-          <div class="badge mb-6">MCP Integration</div>
-          <h2 class="text-4xl font-bold mb-6">Talk to your Spark pipeline with Claude</h2>
-          <p class="text-gray-400 leading-relaxed mb-6">
-            CatalystOps ships a built-in MCP server that starts automatically when VS Code opens.
-            It runs on a static port (<code class="text-brand font-mono text-xs">127.0.0.1:49152/mcp</code>), auto-discovered by VS Code 1.99+.
-            Claude and other AI clients can call CatalystOps tools directly —
-            analyze code, fetch billing data, run dry-runs, and read plan results
-            through natural language.
-          </p>
-          <ul class="space-y-3 text-sm">
-            <li class="flex items-start gap-3">
-              <div class="mt-0.5 w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center flex-none">
-                <svg class="w-3 h-3 text-brand" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              </div>
-              <span class="text-gray-300"><strong class="text-white">analyze_pyspark</strong> — run local analysis on any code snippet</span>
-            </li>
-            <li class="flex items-start gap-3">
-              <div class="mt-0.5 w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center flex-none">
-                <svg class="w-3 h-3 text-brand" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              </div>
-              <span class="text-gray-300"><strong class="text-white">run_dry_run</strong> — trigger a Databricks dry-run from chat</span>
-            </li>
-            <li class="flex items-start gap-3">
-              <div class="mt-0.5 w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center flex-none">
-                <svg class="w-3 h-3 text-brand" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              </div>
-              <span class="text-gray-300"><strong class="text-white">get_billing_summary</strong> — ask about DBU spend in plain English</span>
-            </li>
-            <li class="flex items-start gap-3">
-              <div class="mt-0.5 w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center flex-none">
-                <svg class="w-3 h-3 text-brand" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              </div>
-              <span class="text-gray-300"><strong class="text-white">get_plan_analysis</strong> — read last dry-run plan results from Claude</span>
-            </li>
-            <li class="flex items-start gap-3">
-              <div class="mt-0.5 w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center flex-none">
-                <svg class="w-3 h-3 text-brand" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              </div>
-              <span class="text-gray-300"><strong class="text-white">list_clusters</strong> / <strong class="text-white">list_job_runs</strong> / <strong class="text-white">get_job_run_plan</strong> — inspect workspace clusters and historical job plans</span>
-            </li>
-          </ul>
-        </div>
+    <!-- Status bar -->
+    <div class="ide-statusbar">
+      <span id="s-err" class="s-err">✕ <span id="s-err-n">1</span></span>
+      <span id="s-warn" class="s-warn">⚠ <span id="s-warn-n">2</span></span>
+      <span style="margin-left:auto">Python 3.11</span>
+      <span>Databricks</span>
+    </div>
+  </div>
 
-        <!-- MCP code example -->
-        <div class="code-window">
-          <div class="code-titlebar">
-            <div class="dot bg-red-500"></div>
-            <div class="dot bg-yellow-500"></div>
-            <div class="dot bg-green-500"></div>
-            <span class="ml-3 text-xs text-gray-500 font-mono">Claude chat</span>
-          </div>
-          <div class="p-6 font-mono text-sm space-y-4">
-            <div class="flex gap-3">
-              <div class="text-brand font-bold flex-none">You</div>
-              <div class="text-gray-300">What issues are in my active file?</div>
-            </div>
-            <div class="flex gap-3">
-              <div class="text-blue-400 font-bold flex-none">Claude</div>
-              <div class="text-gray-400 text-xs leading-relaxed">
-                <div class="text-gray-500 mb-2 italic">↳ calling get_active_file_issues…</div>
-                Found <span class="text-yellow-400">3 issues</span> in <span class="text-white">pipeline.py</span>:<br/><br/>
-                <span class="text-red-400">●</span> <span class="text-white">Line 12</span> — collect() pulls all data to the driver. OOM risk on large datasets.<br/>
-                <span class="text-yellow-400">●</span> <span class="text-white">Line 18</span> — Global orderBy shuffles all data to one partition.<br/>
-                <span class="text-blue-400">●</span> <span class="text-white">Line 31</span> — Streaming query has no .trigger() — continuous micro-batches.
-              </div>
-            </div>
-            <div class="flex gap-3">
-              <div class="text-brand font-bold flex-none">You</div>
-              <div class="text-gray-300">Fix the streaming issue and run a dry run</div>
-            </div>
-            <div class="flex gap-3">
-              <div class="text-blue-400 font-bold flex-none">Claude</div>
-              <div class="text-gray-400 text-xs leading-relaxed">
-                <div class="text-gray-500 mb-2 italic">↳ calling run_dry_run…</div>
-                Dry run complete. The plan shows a <span class="text-yellow-400">Sort-Merge Join</span> on line 8 — one side is small enough to broadcast.
-                Want me to add a broadcast hint?
-              </div>
-            </div>
-          </div>
-        </div>
+</section>
+
+<!-- ── Stats strip ────────────────────────────────────────────────── -->
+<div class="stats-strip">
+  <div class="stat-cell">
+    <div class="stat-num">30<sup>+</sup></div>
+    <div class="stat-label">Anti-pattern rules — fired inline, no cluster</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num">2</div>
+    <div class="stat-label">Execution targets — Databricks cluster &amp; serverless</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num">0<sup>$</sup></div>
+    <div class="stat-label">Cost for local analysis — runs entirely in VS Code</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num">Free</div>
+    <div class="stat-label">Elastic License 2.0 — open source on GitHub</div>
+  </div>
+</div>
+
+<!-- ── Features ──────────────────────────────────────────────────── -->
+<section id="features" class="features">
+  <div class="sec-header">
+    <p class="sec-label">Features</p>
+    <h2 class="sec-title">The full picture, inside the editor</h2>
+    <p class="sec-sub">From static analysis to live cluster plan inspection — without leaving VS Code.</p>
+  </div>
+
+  <div class="bento">
+
+    <!-- Large: Local analysis -->
+    <div class="b-card c8 accent-top">
+      <span class="b-tag">Core</span>
+      <h3>Local Static Analysis</h3>
+      <p>Detects 30+ PySpark and Databricks anti-patterns as you type.
+         Zero cluster required. Squiggles appear instantly for <code>collect()</code>, <code>crossJoin()</code>,
+         unsafe writes, SQL injection, schema drift, UDF overuse, and more.</p>
+      <ul class="rule-list" style="margin-top:20px">
+        <li><span class="rule-id">CODE_COLLECT_001</span><span class="rule-name">collect() OOM risk</span></li>
+        <li><span class="rule-id">CODE_ORDER_001</span><span class="rule-name">global orderBy bottleneck</span></li>
+        <li><span class="rule-id">CODE_CROSS_001</span><span class="rule-name">accidental cross join</span></li>
+        <li><span class="rule-id">CODE_UDF_001</span><span class="rule-name">Python UDF — use native F.*</span></li>
+        <li><span class="rule-id">CODE_COUNT_001</span><span class="rule-name">count() &gt; 0 instead of isEmpty()</span></li>
+      </ul>
+      <div class="b-ghost-num">30+</div>
+    </div>
+
+    <!-- Small: Dry-run -->
+    <div class="b-card c4">
+      <div class="b-icon">
+        <svg width="16" height="16" fill="none" stroke="#F97316" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+      </div>
+      <h3>Dry-Run Plan Analysis</h3>
+      <p>Submits a neutralized copy of your script to Databricks and returns the physical Catalyst plan — join strategies, shuffle exchanges, broadcast thresholds, and cost estimates.</p>
+    </div>
+
+    <!-- Small: Job history -->
+    <div class="b-card c4">
+      <div class="b-icon">
+        <svg width="16" height="16" fill="none" stroke="#F97316" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+      </div>
+      <h3>Job Run Analysis</h3>
+      <p>Pull any past Databricks job from the sidebar. CatalystOps reads the Spark event log from DBFS and opens an interactive DAG with operator trees and issue badges.</p>
+    </div>
+
+    <!-- Small: SSH -->
+    <div class="b-card c4">
+      <div class="b-icon">
+        <svg width="16" height="16" fill="none" stroke="#F97316" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+      </div>
+      <h3>One-Click SSH</h3>
+      <p>The Clusters panel lists every cluster in your workspace. Click SSH — CatalystOps starts it, runs setup, and opens VS Code Remote SSH on the driver. No terminal needed.</p>
+    </div>
+
+    <!-- Small: Billing -->
+    <div class="b-card c4">
+      <div class="b-icon">
+        <svg width="16" height="16" fill="none" stroke="#F97316" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <h3>Billing Dashboard</h3>
+      <p>Tracks DBU and dollar spend per period directly from <code>system.billing.usage</code> with a 1-hour cache. After each serverless run, fetches actual DBU consumption.</p>
+    </div>
+
+    <!-- Small: Asset Bundles -->
+    <div class="b-card c4">
+      <div class="b-icon">
+        <svg width="16" height="16" fill="none" stroke="#F97316" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+        </svg>
+      </div>
+      <h3>Asset Bundle Support</h3>
+      <p>Detects <code>databricks.yml</code>, lists every spark_python_task and notebook_task in the sidebar, and validates 40+ schema rules inline — alert v2 schema, volume grants, cluster config, and more.</p>
+    </div>
+
+    <!-- Large: MCP -->
+    <div class="b-card c8">
+      <span class="b-tag">AI Integration</span>
+      <h3>Built-in MCP Server</h3>
+      <p>Ships a Streamable HTTP MCP server auto-discovered by VS Code 1.99+. Runs on <code>127.0.0.1:49152/mcp</code>. Claude, GitHub Copilot, and Cursor can call CatalystOps tools directly — analyze code, fetch billing data, and run dry-runs through natural language.</p>
+      <div style="margin-top:20px;display:flex;gap:8px;flex-wrap:wrap">
+        <span style="font-family:var(--font-mono);font-size:0.62rem;background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.15);color:#22D3EE;padding:4px 10px;border-radius:2px">analyze_pyspark</span>
+        <span style="font-family:var(--font-mono);font-size:0.62rem;background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.15);color:#22D3EE;padding:4px 10px;border-radius:2px">run_dry_run</span>
+        <span style="font-family:var(--font-mono);font-size:0.62rem;background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.15);color:#22D3EE;padding:4px 10px;border-radius:2px">get_billing_summary</span>
+        <span style="font-family:var(--font-mono);font-size:0.62rem;background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.15);color:#22D3EE;padding:4px 10px;border-radius:2px">get_plan_analysis</span>
+        <span style="font-family:var(--font-mono);font-size:0.62rem;background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.15);color:#22D3EE;padding:4px 10px;border-radius:2px">list_clusters</span>
+        <span style="font-family:var(--font-mono);font-size:0.62rem;background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.15);color:#22D3EE;padding:4px 10px;border-radius:2px">get_job_run_plan</span>
+        <span style="font-family:var(--font-mono);font-size:0.62rem;background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.15);color:#22D3EE;padding:4px 10px;border-radius:2px">list_bundle_tasks</span>
       </div>
     </div>
-  </section>
 
-  <!-- ── CTA ──────────────────────────────────────────────────────────────── -->
-  <section class="py-24 px-6 border-t border-border">
-    <div class="max-w-2xl mx-auto text-center">
-      <h2 class="text-4xl font-bold mb-4">Start optimizing today</h2>
-      <p class="text-gray-400 mb-10 text-lg">
-        Free, open-source, and available for any Databricks or PySpark project.
+  </div>
+</section>
+
+<!-- ── How it works ────────────────────────────────────────────────── -->
+<section id="how-it-works" class="how">
+  <div class="sec-header" style="padding-bottom:0">
+    <p class="sec-label">How it works</p>
+    <h2 class="sec-title">From install to insight<br />in under five minutes</h2>
+  </div>
+
+  <div class="steps" style="margin-top:64px">
+
+    <div class="step">
+      <div class="step-ghost">01</div>
+      <p class="step-label">Install</p>
+      <h3>Open a Python file</h3>
+      <p>Install from the VS Code Marketplace. The moment you open a <code>.py</code> file, local analysis kicks in — no configuration. 30+ rules light up immediately for any PySpark anti-patterns it finds.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-ghost">02</div>
+      <p class="step-label">Connect</p>
+      <h3>Link to Databricks</h3>
+      <p>Run <em>CatalystOps: Configure Databricks Connection</em> from the Command Palette. The setup wizard detects Azure CLI, GCP ADC, <code>~/.databrickscfg</code>, OAuth, or a personal access token — and shows only your options.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-ghost">03</div>
+      <p class="step-label">Analyze</p>
+      <h3>Run a dry-run plan</h3>
+      <p>Press <kbd>⌘⇧K</kbd> to submit the current file. CatalystOps neutralizes side-effects, runs the Catalyst planner on your cluster, and returns the physical plan with join strategies, cost annotations, and fixes — in the sidebar.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── MCP section ────────────────────────────────────────────────── -->
+<section id="mcp" class="mcp">
+  <div class="mcp-inner">
+
+    <div>
+      <p class="sec-label">MCP Integration</p>
+      <h2 class="sec-title" style="max-width:400px">
+        Talk to your Spark pipeline with Claude
+      </h2>
+      <p style="font-size:0.9rem;color:var(--text-muted);line-height:1.8;margin-top:16px;max-width:440px">
+        CatalystOps ships a built-in MCP server that starts automatically when VS Code opens,
+        running on a static port auto-discovered by VS Code 1.99+. Claude and other AI clients
+        can call CatalystOps tools directly through natural language.
       </p>
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
-           target="_blank" class="btn-primary" style="min-width:260px;text-align:center">
-          Install for VS Code
-        </a>
-        <a href="https://open-vsx.org/extension/CatalystOps/catalystops"
-           target="_blank" class="btn-secondary" style="min-width:260px;text-align:center">
-          Open VSX Registry
-        </a>
-      </div>
-      <p class="text-gray-600 text-sm mt-6">Also available on Open VSX for Cursor, Theia, and other editors.</p>
-    </div>
-  </section>
 
-  <!-- ── Footer ───────────────────────────────────────────────────────────── -->
-  <footer class="border-t border-border py-7">
-    <div class="max-w-6xl mx-auto px-6 flex flex-col items-center gap-3 text-sm text-muted sm:flex-row sm:justify-between">
-      <div class="flex items-center gap-2">
-        <img src="icon.png" alt="" class="w-4 h-4 opacity-40" />
-        <span>© 2026 CatalystOps. All rights reserved.</span>
-      </div>
-      <div class="flex gap-6">
-        <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank" class="hover:text-white transition-colors">Marketplace</a>
-        <a href="https://github.com/lezwon/CatalystOps" target="_blank" class="hover:text-white transition-colors">GitHub</a>
-        <a href="https://open-vsx.org/extension/CatalystOps/catalystops" target="_blank" class="hover:text-white transition-colors">Open VSX</a>
-        <a href="/docs/getting-started.html" class="hover:text-white transition-colors">Docs</a>
-        <a href="/blog/" class="hover:text-white transition-colors">Blog</a>
+      <div class="mcp-tools">
+        <div class="mcp-tool">
+          <span class="tool-name">analyze_pyspark</span>
+          <span class="tool-desc">Run local analysis on any code snippet</span>
+        </div>
+        <div class="mcp-tool">
+          <span class="tool-name">run_dry_run</span>
+          <span class="tool-desc">Trigger a Databricks dry-run from chat</span>
+        </div>
+        <div class="mcp-tool">
+          <span class="tool-name">get_billing_summary</span>
+          <span class="tool-desc">Ask about DBU spend in plain English</span>
+        </div>
+        <div class="mcp-tool">
+          <span class="tool-name">get_plan_analysis</span>
+          <span class="tool-desc">Read last dry-run plan results from Claude</span>
+        </div>
+        <div class="mcp-tool">
+          <span class="tool-name">list_clusters</span>
+          <span class="tool-desc">List and inspect workspace clusters</span>
+        </div>
+        <div class="mcp-tool">
+          <span class="tool-name">get_job_run_plan</span>
+          <span class="tool-desc">Fetch physical plan for any historical job run</span>
+        </div>
       </div>
     </div>
-  </footer>
+
+    <div class="chat-window">
+      <div class="chat-top">
+        <span class="chat-dot"></span>
+        Claude — CatalystOps MCP
+      </div>
+      <div class="chat-body">
+
+        <div class="msg-user">What issues are in my active file?</div>
+
+        <div class="msg-bot">
+          <div class="msg-bot-from">Claude</div>
+          <div class="msg-bot-tool">↳ calling get_active_file_issues…</div>
+          <div class="msg-bot-bubble">
+            Found <span class="c-w">3 issues</span> in <span class="c-w">pipeline.py</span>:<br/><br/>
+            <span class="c-r">●</span> <span class="c-w">Line 12</span> — collect() pulls all data to driver. OOM risk on large datasets.<br/>
+            <span class="c-y">●</span> <span class="c-w">Line 18</span> — Global orderBy shuffles all data to one partition.<br/>
+            <span class="c-b">●</span> <span class="c-w">Line 10</span> — count("*") triggers a full Spark job. Use isEmpty() for presence checks.
+          </div>
+        </div>
+
+        <div class="msg-user">Fix the orderBy and run a dry run on the result</div>
+
+        <div class="msg-bot">
+          <div class="msg-bot-from">Claude</div>
+          <div class="msg-bot-tool">↳ calling run_dry_run…</div>
+          <div class="msg-bot-bubble">
+            Replaced <code style="font-family:var(--font-mono);font-size:0.75em;color:var(--accent);background:rgba(249,115,22,0.08);padding:1px 5px;border-radius:2px">orderBy("date")</code> with <code style="font-family:var(--font-mono);font-size:0.75em;color:var(--green);background:rgba(74,222,128,0.08);padding:1px 5px;border-radius:2px">sortWithinPartitions("date")</code>.<br/><br/>
+            Dry run complete. Plan shows a <span class="c-y">Sort-Merge Join</span> on line 14 — one side is 120 MB, under your 200 MB broadcast threshold. Want me to add a broadcast hint?
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── CTA ────────────────────────────────────────────────────────── -->
+<section class="cta">
+  <div class="cta-inner">
+    <h2 class="cta-title">
+      Better Spark.<br />
+      Lower bills.<br />
+      <span style="color:var(--accent)">Right now.</span>
+    </h2>
+    <p class="cta-sub">
+      Free, open source, and works with any Databricks or PySpark project.
+      Also available on Open VSX for Cursor, Theia, and other editors.
+    </p>
+    <div class="cta-actions">
+      <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
+         target="_blank" rel="noopener" class="btn-primary">
+        Install for VS Code
+      </a>
+      <a href="https://open-vsx.org/extension/CatalystOps/catalystops"
+         target="_blank" rel="noopener" class="btn-outline">
+        Open VSX Registry
+      </a>
+    </div>
+    <p class="cta-note">// Elastic License 2.0 · Node.js v16+ · VS Code v1.85+</p>
+  </div>
+</section>
+
+<!-- ── Footer ────────────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <a href="/" class="footer-brand">
+      <img src="icon.png" alt="" />
+      © 2026 CatalystOps
+    </a>
+    <nav class="footer-links">
+      <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank" rel="noopener">Marketplace</a>
+      <a href="https://github.com/lezwon/CatalystOps" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://open-vsx.org/extension/CatalystOps/catalystops" target="_blank" rel="noopener">Open VSX</a>
+      <a href="/docs/getting-started.html">Docs</a>
+      <a href="/blog/">Blog</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function () {
+  const kw = s => `<span class="kw">${s}</span>`;
+  const fn = s => `<span class="fn">${s}</span>`;
+  const v  = s => `<span class="var">${s}</span>`;
+  const m  = s => `<span class="method">${s}</span>`;
+  const st = s => `<span class="str">${s}</span>`;
+  const p  = s => `<span class="punc">${s}</span>`;
+  const er = s => `<span class="err-tok">${s}</span>`;
+  const ok = s => `<span class="method">${s}</span>`;
+  const nu = s => `<span class="cls">${s}</span>`;
+
+  const LINE9_A  = v('all_data')+p(' = ')+v('events')+p('.')+er('collect')+p('()');
+  const LINE9_B  = v('all_data')+p(' = ')+v('events')+p('.')+ok('take')+p('(')+nu('1000')+p(')');
+  const LINE12_A = v('result')+p(' = ')+v('daily')+p('.')+m('join')+p('(')+v('lookup')+p(', ')+st('"date"')+p(')');
+  const LINE12_B = v('result')+p(' = ')+v('daily')+p('.')+m('join')+p('(')+fn('F')+p('.')+m('broadcast')+p('(')+v('lookup')+p(')')+p(', ')+st('"date"')+p(')');
+  const LINE14_A = v('sorted_df')+p(' = ')+v('result')+p('.')+er('orderBy')+p('(')+st('"date"')+p(')');
+  const LINE14_B = v('sorted_df')+p(' = ')+v('result')+p('.')+ok('sortWithinPartitions')+p('(')+st('"date"')+p(')');
+
+  const $  = id => document.getElementById(id);
+  const cl9 = $('cl-9'), cl12 = $('cl-12'), cl14 = $('cl-14');
+  const msgs = $('chat-msgs'), inputEl = $('chat-input-text'), cursorEl = $('chat-cursor');
+  const claudeTab = $('claude-tab');
+
+  let timers = [];
+  function at(ms, fn) { timers.push(setTimeout(fn, ms)); }
+
+  function esc(t) {
+    return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function typeInto(el, plainText, finalHtml) {
+    let i = 0;
+    el.innerHTML = '';
+    const CURSOR = '<span class="cursor"></span>';
+    function step() {
+      if (i <= plainText.length) {
+        el.innerHTML = esc(plainText.slice(0, i)) + CURSOR;
+        i++;
+        timers.push(setTimeout(step, 36 + Math.random() * 22));
+      } else {
+        el.innerHTML = finalHtml;
+      }
+    }
+    step();
+  }
+
+  function typeInput(text, onDone) {
+    cursorEl.style.display = 'inline-block';
+    inputEl.textContent = '';
+    let i = 0;
+    function step() {
+      if (i <= text.length) {
+        inputEl.textContent = text.slice(0, i);
+        i++;
+        timers.push(setTimeout(step, 40 + Math.random() * 26));
+      } else { if (onDone) onDone(); }
+    }
+    step();
+  }
+
+  function appendMsg(html) {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = html;
+    const el = wrap.firstElementChild;
+    el.classList.add('cm-appear');
+    msgs.appendChild(el);
+    msgs.scrollTop = msgs.scrollHeight;
+    return el;
+  }
+  const userMsg   = text => appendMsg(`<div class="cm-user">${esc(text)}</div>`);
+  const toolMsg   = (name, args) => appendMsg(`<div class="cm-tool"><span class="cm-spinner" id="sp-${name}">◌</span><span style="font-family:var(--font-mono);font-size:0.9rem;color:var(--cyan)">${name}</span><span style="color:var(--text-muted);font-size:0.88rem;font-family:var(--font-mono)"> ${esc(args)}</span></div>`);
+  const claudeMsg = html => appendMsg(`<div class="cm-claude">${html}</div>`);
+
+  function markDone(name) {
+    const sp = document.getElementById('sp-' + name);
+    if (!sp) return;
+    sp.classList.remove('cm-spinner');
+    sp.classList.add('cm-done');
+    sp.textContent = '✓';
+  }
+
+  function applyFix(el, html) {
+    el.classList.remove('line-updated');
+    el.innerHTML = html;
+    void el.offsetWidth;
+    el.classList.add('line-updated');
+  }
+
+  function resetStatus() {
+    const errEl = $('s-err'), warnEl = $('s-warn');
+    if (errEl)  { errEl.className = 's-err';  errEl.innerHTML  = '✕ <span id="s-err-n">1</span>'; }
+    if (warnEl) { warnEl.className = 's-warn'; warnEl.innerHTML = '⚠ <span id="s-warn-n">2</span>'; }
+  }
+
+  function reset() {
+    timers.forEach(clearTimeout); timers = [];
+    msgs.innerHTML = '';
+    inputEl.innerHTML = '<em style="color:var(--text-muted)">ask Claude anything…</em>';
+    cursorEl.style.display = 'none';
+    claudeTab.style.borderBottom = ''; claudeTab.style.color = '';
+    cl9.innerHTML  = '<span style="color:var(--accent);animation:blink 1s step-end infinite">▌</span>';
+    cl12.innerHTML = LINE12_A;
+    cl14.innerHTML = LINE14_A;
+    cl9.classList.remove('line-updated');
+    cl12.classList.remove('line-updated');
+    cl14.classList.remove('line-updated');
+    resetStatus();
+  }
+
+  function planBlock(lines) {
+    return '<pre style="font-family:var(--font-mono);font-size:0.88rem;line-height:1.7;color:var(--text-muted);background:rgba(0,0,0,0.35);border:1px solid var(--border);border-radius:4px;padding:9px 12px;margin:6px 0 2px;overflow:hidden;white-space:pre">' + lines + '</pre>';
+  }
+
+  function run() {
+    reset();
+
+    // Phase 1 — type the collect() anti-pattern into line 9
+    at(800, () => typeInto(cl9, 'all_data = events.collect()', LINE9_A));
+
+    // Phase 2 — error indicator ticks up
+    at(3600, () => {
+      const en = $('s-err-n'), wn = $('s-warn-n');
+      if (en) en.textContent = '3';
+      if (wn) wn.textContent = '1';
+    });
+
+    // Phase 3 — user activates Claude tab
+    at(4800, () => {
+      claudeTab.style.borderBottom = '2px solid var(--accent)';
+      claudeTab.style.color = 'var(--accent)';
+    });
+
+    // Phase 4 — type request referencing last job run
+    at(5400, () => typeInput('optimize pipeline.py using last Databricks job run'));
+
+    // Phase 5 — submit request
+    at(9000, () => {
+      const txt = inputEl.textContent;
+      inputEl.innerHTML = '<em style="color:var(--text-muted)">ask Claude anything…</em>';
+      cursorEl.style.display = 'none';
+      userMsg(txt);
+    });
+
+    // Phase 6 — fetch execution plan from Databricks
+    at(9800, () => toolMsg('get_job_run_plan', '(job_id="etl_daily_20240423", cluster="prod-analytics")'));
+
+    // Phase 7 — plan arrives, show physical plan
+    at(12200, () => {
+      markDone('get_job_run_plan');
+      claudeMsg(
+        '<span style="color:var(--text-muted);font-size:0.62rem">Job run #20240423 · runtime 4m 12s · 8 nodes</span>' +
+        planBlock(
+          '<span style="color:var(--cyan)">== Physical Plan ==</span>\n' +
+          'CollectLimit 2147483647\n' +
+          '<span style="color:var(--red-tok)">+- LocalTableScan [all_data]         ← collect() driver pull</span>\n' +
+          '<span style="color:var(--yellow-tok)">SortMergeJoin Inner, [date], [date]  ← no broadcast hint</span>\n' +
+          ':- Sort [date ASC], true\n' +
+          ':  +- Exchange hashpartitioning(date, 200)\n' +
+          ':     +- Scan parquet prod.events\n' +
+          '+- Sort [date ASC], true\n' +
+          '   +- Exchange hashpartitioning(date, 200)\n' +
+          '<span style="color:var(--red-tok)">Exchange SinglePartition              ← orderBy global sort</span>\n' +
+          '   +- Scan parquet prod.lookup'
+        )
+      );
+    });
+
+    // Phase 8 — cross-reference plan against source code
+    at(13600, () => toolMsg('analyze_pyspark', '(file="pipeline.py", plan_id="20240423")'));
+
+    // Phase 9 — analysis complete, findings tied to plan nodes
+    at(15400, () => {
+      markDone('analyze_pyspark');
+      claudeMsg(
+        'Plan analysis found <strong style="color:#fff">3 optimizations</strong>:<br/><br/>' +
+        '<div class="cm-plan-row"><span style="color:var(--red-tok)">● ERR</span>&nbsp;<strong>Line 9</strong> — <code style="font-family:var(--font-mono);font-size:0.62em;color:var(--red-tok)">collect()</code> → <span style="color:var(--text-muted)">CollectLimit node pulled 2.1 GB to driver</span></div>' +
+        '<div class="cm-plan-row"><span style="color:var(--red-tok)">● ERR</span>&nbsp;<strong>Line 14</strong> — <code style="font-family:var(--font-mono);font-size:0.62em;color:var(--red-tok)">orderBy()</code> → <span style="color:var(--text-muted)">Exchange SinglePartition bottleneck — 38s shuffle</span></div>' +
+        '<div class="cm-plan-row"><span style="color:var(--yellow-tok)">● WARN</span>&nbsp;<strong>Line 12</strong> — <span style="color:var(--text-muted)">SortMergeJoin on 18 MB table · broadcast threshold is 200 MB</span></div>'
+      );
+    });
+
+    // Phase 10 — offer specific fixes
+    at(17400, () => {
+      claudeMsg(
+        'Ready to apply:<br/>' +
+        '<div class="cm-plan-row" style="margin-top:5px"><span style="color:var(--cyan);font-family:var(--font-mono);font-size:0.62em">collect()</span> <span style="color:var(--text-muted)">→</span> <span style="color:var(--green);font-family:var(--font-mono);font-size:0.62em">take(1000)</span><span style="color:var(--text-muted);font-size:0.62em"> · prevents driver OOM</span></div>' +
+        '<div class="cm-plan-row"><span style="color:var(--cyan);font-family:var(--font-mono);font-size:0.62em">orderBy()</span> <span style="color:var(--text-muted)">→</span> <span style="color:var(--green);font-family:var(--font-mono);font-size:0.62em">sortWithinPartitions()</span><span style="color:var(--text-muted);font-size:0.62em"> · removes global shuffle</span></div>' +
+        '<div class="cm-plan-row"><span style="color:var(--cyan);font-family:var(--font-mono);font-size:0.62em">join(lookup)</span> <span style="color:var(--text-muted)">→</span> <span style="color:var(--green);font-family:var(--font-mono);font-size:0.62em">join(F.broadcast(lookup))</span><span style="color:var(--text-muted);font-size:0.62em"> · eliminates SortMergeJoin</span></div>'
+      );
+    });
+
+    // Phase 11 — type confirmation
+    at(19200, () => typeInput('yes apply all'));
+
+    // Phase 12 — submit
+    at(21600, () => {
+      inputEl.innerHTML = '<em style="color:var(--text-muted)">ask Claude anything…</em>';
+      cursorEl.style.display = 'none';
+      userMsg('yes apply all');
+    });
+
+    // Phase 13 — apply fixes to code (staggered)
+    at(22300, () => applyFix(cl9,  LINE9_B));
+    at(22650, () => applyFix(cl12, LINE12_B));
+    at(23000, () => applyFix(cl14, LINE14_B));
+
+    // Phase 14 — status bar goes green
+    at(23600, () => {
+      const errEl = $('s-err'), warnEl = $('s-warn');
+      if (errEl)  { errEl.className  = 's-ok';   errEl.innerHTML  = '✓ 3 fixed'; }
+      if (warnEl) { warnEl.className = 's-warn';  warnEl.innerHTML = '⚠ <span id="s-warn-n">0</span>'; }
+    });
+
+    // Phase 15 — Claude confirms with savings from real plan data
+    at(24200, () => {
+      claudeMsg(
+        '<span style="color:var(--green)">✓ Applied.</span> Based on job run #20240423:<br/>' +
+        '<div class="cm-plan-row">CollectLimit removed · <strong style="color:#fff">−2.1 GB driver memory</strong></div>' +
+        '<div class="cm-plan-row">SortMergeJoin → BroadcastHashJoin · <strong style="color:#fff">−Exchange stage (38s)</strong></div>' +
+        '<div class="cm-plan-row">SinglePartition → local sort · <strong style="color:#fff">est. 4m 12s → ~2m 05s</strong></div>'
+      );
+    });
+
+    // Loop
+    at(35000, run);
+  }
+
+  const ideEl = document.querySelector('.hero-ide');
+  if (!ideEl) { run(); return; }
+  const obs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) { obs.disconnect(); run(); }
+  }, { threshold: 0.2 });
+  obs.observe(ideEl);
+})();
+</script>
 
 </body>
 </html>
