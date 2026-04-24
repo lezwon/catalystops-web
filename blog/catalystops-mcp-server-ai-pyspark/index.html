@@ -73,28 +73,26 @@
 </head>
 <body class="text-gray-100 font-sans antialiased">
 
-  <!-- Nav -->
-  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-border bg-surface/80 backdrop-blur-md">
-    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-2.5">
-        <a href="/" class="flex items-center gap-2.5">
-          <img src="/icon.png" alt="CatalystOps" class="w-7 h-7" />
-          <span class="font-bold text-lg tracking-tight">CatalystOps</span>
-        </a>
-      </div>
-      <div class="hidden md:flex items-center gap-8 text-sm text-gray-400">
-        <a href="/#features" class="nav-link hover:text-white transition-colors">Features</a>
-        <a href="/#how-it-works" class="nav-link hover:text-white transition-colors">How it works</a>
-        <a href="/#mcp" class="nav-link hover:text-white transition-colors">MCP</a>
-        <a href="/docs/getting-started.html" class="nav-link hover:text-white transition-colors">Docs</a>
-        <a href="/blog/" class="nav-link hover:text-white transition-colors">Blog</a>
-      </div>
-      <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops" target="_blank" class="btn-nav">Install Free</a>
-    </div>
-  </nav>
+<nav class="site-nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="/icon.png" alt="CatalystOps" />
+      CatalystOps
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#features">Features</a></li>
+      <li><a href="/#how-it-works">How it works</a></li>
+      <li><a href="/#mcp">MCP</a></li>
+      <li><a href="/docs/getting-started.html">Docs</a></li>
+      <li><a href="/blog/" style="color:var(--text)">Blog</a></li>
+    </ul>
+    <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
+       target="_blank" rel="noopener" class="nav-cta">Install Free</a>
+  </div>
+</nav>
 
   <!-- Page -->
-  <div class="pt-16">
+  <div style="padding-top: 58px;">
     <div class="max-w-[700px] mx-auto px-6">
 
       <!-- Breadcrumb -->
