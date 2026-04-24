@@ -83,38 +83,6 @@
       background-size: 72px 72px;
     }
 
-    /* ── Nav ── */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-      height: 58px; display: flex; align-items: center;
-      background: rgba(7,9,15,0.88); backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
-    }
-    .nav-inner {
-      max-width: 1280px; margin: 0 auto; padding: 0 28px; width: 100%;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .nav-logo {
-      display: flex; align-items: center; gap: 10px; text-decoration: none;
-      color: var(--text); font-family: var(--font-display); font-weight: 700;
-      font-size: 1rem; letter-spacing: -0.01em;
-    }
-    .nav-logo img { width: 26px; height: 26px; }
-    .nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
-    .nav-links a {
-      color: var(--text-muted); text-decoration: none;
-      font-size: 0.8125rem; font-weight: 500; transition: color 0.15s;
-    }
-    .nav-links a:hover { color: var(--text); }
-    .nav-cta {
-      font-family: var(--font-display); font-weight: 700; font-size: 0.75rem;
-      letter-spacing: 0.06em; text-transform: uppercase;
-      background: var(--accent); color: #fff;
-      padding: 8px 18px; border-radius: 3px; text-decoration: none;
-      transition: background 0.15s, box-shadow 0.15s;
-    }
-    .nav-cta:hover { background: var(--accent-dim); box-shadow: 0 0 18px rgba(249,115,22,0.3); }
-
     /* ── Hero ── */
     .hero {
       position: relative; min-height: 100vh;
@@ -585,8 +553,7 @@
       .stat-cell:nth-child(2) { border-right: none; }
       .stat-cell:nth-child(3) { border-right: 1px solid var(--border); }
       .stat-cell:nth-child(1), .stat-cell:nth-child(2) { border-bottom: 1px solid var(--border); }
-      .nav-links { display: none; }
-      .hero-actions { flex-direction: column; align-items: flex-start; }
+.hero-actions { flex-direction: column; align-items: flex-start; }
       .cta-actions { flex-direction: column; align-items: stretch; }
       .footer-inner { flex-direction: column; gap: 20px; }
       .mcp-tool { grid-template-columns: 1fr; gap: 4px; }
@@ -596,7 +563,7 @@
 <body>
 
 <!-- ── Nav ─────────────────────────────────────────────────────────── -->
-<nav>
+<nav class="site-nav">
   <div class="nav-inner">
     <a href="/" class="nav-logo">
       <img src="icon.png" alt="CatalystOps icon" />
@@ -609,8 +576,20 @@
       <li><a href="/docs/getting-started.html">Docs</a></li>
       <li><a href="/blog/">Blog</a></li>
     </ul>
-    <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
-       target="_blank" rel="noopener" class="nav-cta">Install Free</a>
+    <div class="nav-right">
+      <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
+         target="_blank" rel="noopener" class="nav-cta">Install Free</a>
+      <button class="nav-hamburger" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+  <div class="nav-mobile-menu" id="nav-mobile-menu">
+    <a href="#features">Features</a>
+    <a href="#how-it-works">How it works</a>
+    <a href="#mcp">MCP</a>
+    <a href="/docs/getting-started.html">Docs</a>
+    <a href="/blog/">Blog</a>
   </div>
 </nav>
 
@@ -1243,6 +1222,23 @@
   }, { threshold: 0.2 });
   obs.observe(ideEl);
 })();
+</script>
+
+<script>
+  const navToggle = document.getElementById('nav-toggle');
+  const navMenu = document.getElementById('nav-mobile-menu');
+  navToggle.addEventListener('click', () => {
+    const open = navMenu.classList.toggle('open');
+    navToggle.classList.toggle('open', open);
+    navToggle.setAttribute('aria-expanded', open);
+  });
+  navMenu.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      navMenu.classList.remove('open');
+      navToggle.classList.remove('open');
+      navToggle.setAttribute('aria-expanded', false);
+    });
+  });
 </script>
 
 </body>

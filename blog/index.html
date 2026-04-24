@@ -100,8 +100,20 @@
       <li><a href="/docs/getting-started.html">Docs</a></li>
       <li><a href="/blog/" style="color:var(--text)">Blog</a></li>
     </ul>
-    <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
-       target="_blank" rel="noopener" class="nav-cta">Install Free</a>
+    <div class="nav-right">
+      <a href="https://marketplace.visualstudio.com/items?itemName=CatalystOps.catalystops"
+         target="_blank" rel="noopener" class="nav-cta">Install Free</a>
+      <button class="nav-hamburger" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+  <div class="nav-mobile-menu" id="nav-mobile-menu">
+    <a href="/#features">Features</a>
+    <a href="/#how-it-works">How it works</a>
+    <a href="/#mcp">MCP</a>
+    <a href="/docs/getting-started.html">Docs</a>
+    <a href="/blog/" style="color:var(--text)">Blog</a>
   </div>
 </nav>
 
@@ -200,6 +212,12 @@
     </nav>
   </div>
 </footer>
+
+<script>
+  const t=document.getElementById('nav-toggle'),m=document.getElementById('nav-mobile-menu');
+  t.addEventListener('click',()=>{const o=m.classList.toggle('open');t.classList.toggle('open',o);t.setAttribute('aria-expanded',o);});
+  m.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{m.classList.remove('open');t.classList.remove('open');t.setAttribute('aria-expanded',false);}));
+</script>
 
 </body>
 </html>
