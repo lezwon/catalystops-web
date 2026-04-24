@@ -61,6 +61,25 @@ html, body { background: var(--bg); overflow-x: hidden; color: var(--text); }
 }
 .btn-nav:hover { background: var(--accent-dim); box-shadow: 0 0 20px rgba(249,115,22,0.3); }
 
+.btn-primary {
+  font-family: var(--font-display); font-weight: 700; font-size: 0.8125rem;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  background: var(--accent); color: #fff !important;
+  padding: 13px 28px; border-radius: 3px; text-decoration: none !important;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.btn-primary:hover { background: var(--accent-dim); box-shadow: 0 0 24px rgba(249,115,22,0.35); }
+
+.btn-outline {
+  font-family: var(--font-display); font-weight: 600; font-size: 0.8125rem;
+  color: var(--text-muted) !important; text-decoration: none !important;
+  border: 1px solid var(--border-hi); padding: 12px 24px; border-radius: 3px;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.btn-outline:hover { color: var(--text) !important; border-color: var(--text-muted); }
+
 .btn-primary-legacy {
   background: var(--accent); color: #fff !important; font-weight: 600;
   border-radius: 3px; padding: 12px 28px; font-size: 0.9rem;
