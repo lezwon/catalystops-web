@@ -1,0 +1,228 @@
+/* ── CatalystOps docs theme override ──────────────────────────────────────
+   Injected into VitePress-built HTML to apply the index.html design system.
+   ───────────────────────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ── VitePress token overrides ── */
+:root, .dark {
+  /* Backgrounds */
+  --vp-c-bg:         #07090F;
+  --vp-c-bg-alt:     #0A0E1A;
+  --vp-c-bg-elv:     #0C1120;
+  --vp-c-bg-soft:    #0C1120;
+
+  /* Borders */
+  --vp-c-border:     #1A2235;
+  --vp-c-divider:    #1A2235;
+  --vp-c-gutter:     #07090F;
+
+  /* Text */
+  --vp-c-text-1:     #F1F5F9;
+  --vp-c-text-2:     #64748B;
+  --vp-c-text-3:     #4A5568;
+
+  /* Brand → accent orange */
+  --vp-c-brand-1:    #F97316;
+  --vp-c-brand-2:    #EA6800;
+  --vp-c-brand-3:    #C2410C;
+  --vp-c-brand-soft: rgba(249, 115, 22, 0.1);
+
+  /* Remap indigo to orange */
+  --vp-c-indigo-1:   #F97316;
+  --vp-c-indigo-2:   #EA6800;
+  --vp-c-indigo-3:   #C2410C;
+  --vp-c-indigo-soft: rgba(249, 115, 22, 0.1);
+
+  /* Fonts */
+  --vp-font-family-base: 'Inter', system-ui, sans-serif;
+  --vp-font-family-mono: 'JetBrains Mono', monospace;
+
+  /* Nav + sidebar */
+  --vp-nav-bg-color:      rgba(7, 9, 15, 0.92);
+  --vp-sidebar-bg-color:  #07090F;
+  --vp-nav-height: 60px;
+
+  /* Code blocks */
+  --vp-code-block-bg:     #0A0E1A;
+  --vp-code-color:        #F1F5F9;
+  --vp-code-link-color:   #F97316;
+  --vp-code-line-highlight-color: rgba(249, 115, 22, 0.06);
+}
+
+/* ── Base ── */
+html, body { background: #07090F !important; }
+
+/* ── Nav bar ── */
+.VPNav { border-bottom: 1px solid #1A2235 !important; }
+.VPNavBar {
+  background: rgba(7, 9, 15, 0.92) !important;
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #1A2235 !important;
+}
+.VPNavBarTitle .title {
+  font-family: 'Syne', system-ui, sans-serif !important;
+  font-weight: 700;
+  color: #F97316 !important;
+  letter-spacing: -0.02em;
+}
+.VPNavBarMenuLink:hover { color: #F97316 !important; }
+.VPNavBarMenuLink.active { color: #F97316 !important; }
+.VPNavBarMenuLink.active::after {
+  background: #F97316 !important;
+}
+
+/* ── Sidebar ── */
+.VPSidebar {
+  background: #07090F !important;
+  border-right: 1px solid #1A2235 !important;
+}
+.VPSidebarItem.is-active > .item > .link .text,
+.VPSidebarItem.level-0.is-active > .item .link .text {
+  color: #F97316 !important;
+}
+.VPSidebarItem .indicator { background: #F97316 !important; }
+.VPSidebarItem > .item > .link:hover .text { color: #F97316 !important; }
+
+/* ── Local nav (breadcrumb bar) ── */
+.VPLocalNav { background: #07090F !important; border-bottom: 1px solid #1A2235 !important; }
+
+/* ── Content headings ── */
+.vp-doc h1 {
+  font-family: 'Syne', system-ui, sans-serif !important;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #F1F5F9;
+}
+.vp-doc h2 {
+  font-family: 'Syne', system-ui, sans-serif !important;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  border-top: 1px solid #1A2235;
+  padding-top: 1.5rem;
+  color: #F1F5F9;
+}
+.vp-doc h3 {
+  font-family: 'Syne', system-ui, sans-serif !important;
+  font-weight: 600;
+  color: #F97316;
+}
+.vp-doc h4 {
+  font-family: 'Syne', system-ui, sans-serif !important;
+  color: #F1F5F9;
+}
+
+/* ── Links ── */
+.vp-doc a { color: #F97316; }
+.vp-doc a:hover { color: #EA6800; }
+
+/* ── Inline code ── */
+.vp-doc :not(pre) > code {
+  background: rgba(249, 115, 22, 0.08) !important;
+  color: #F97316 !important;
+  border: 1px solid rgba(249, 115, 22, 0.18) !important;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 0.82em;
+}
+
+/* ── Code blocks ── */
+.vp-doc div[class*="language-"] {
+  background: #0A0E1A !important;
+  border: 1px solid #1A2235;
+  border-radius: 6px;
+}
+.vp-doc div[class*="language-"] pre { background: transparent !important; }
+.vp-doc div[class*="language-"] code { font-family: 'JetBrains Mono', monospace !important; }
+.vp-doc div[class*="language-"]::before {
+  color: #64748B !important;
+  background: transparent !important;
+}
+
+/* ── Custom containers ── */
+.vp-doc .tip, .vp-doc .info {
+  background: rgba(249, 115, 22, 0.05) !important;
+  border-color: rgba(249, 115, 22, 0.3) !important;
+}
+.vp-doc .tip .title, .vp-doc .info .title { color: #F97316 !important; }
+.vp-doc .warning {
+  background: rgba(251, 191, 36, 0.05) !important;
+  border-color: rgba(251, 191, 36, 0.3) !important;
+}
+.vp-doc .danger {
+  background: rgba(248, 113, 113, 0.05) !important;
+  border-color: rgba(248, 113, 113, 0.3) !important;
+}
+
+/* ── Tables ── */
+.vp-doc table { border-collapse: collapse; }
+.vp-doc th {
+  background: #0C1120 !important;
+  color: #F97316 !important;
+  border-color: #1A2235 !important;
+}
+.vp-doc td { border-color: #1A2235 !important; color: #94A3B8; }
+.vp-doc tr:nth-child(even) td { background: rgba(12, 17, 32, 0.5) !important; }
+
+/* ── Outline (ToC) ── */
+.VPDocAsideOutline .root > .outline-link.active,
+.VPDocAsideOutline .outline-link.active { color: #F97316 !important; }
+.VPDocAsideOutline .outline-link:hover { color: #F97316 !important; }
+
+/* ── Footer ── */
+.VPDocFooter { border-top: 1px solid #1A2235 !important; }
+.VPFooter {
+  background: #07090F !important;
+  border-top: 1px solid #1A2235 !important;
+}
+
+/* ── Home hero (docs/index.html) ── */
+.VPHero .name {
+  font-family: 'Syne', system-ui, sans-serif !important;
+  background: linear-gradient(135deg, #fff 30%, #F97316 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+.VPHero .tagline { color: #64748B !important; }
+.VPButton.brand {
+  background: #F97316 !important;
+  border-color: #F97316 !important;
+  color: #fff !important;
+}
+.VPButton.brand:hover {
+  background: #EA6800 !important;
+  border-color: #EA6800 !important;
+}
+.VPButton.alt {
+  border-color: #1A2235 !important;
+  color: #94A3B8 !important;
+  background: transparent !important;
+}
+.VPButton.alt:hover { border-color: #263048 !important; color: #F1F5F9 !important; }
+
+/* ── Features (VPFeature cards) ── */
+.VPFeature {
+  background: #0C1120 !important;
+  border: 1px solid #1A2235 !important;
+  border-radius: 6px !important;
+  transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+.VPFeature:hover {
+  border-color: rgba(249, 115, 22, 0.3) !important;
+  box-shadow: 0 0 24px rgba(249, 115, 22, 0.06) !important;
+}
+.VPFeature .title {
+  font-family: 'Syne', system-ui, sans-serif !important;
+  color: #F1F5F9 !important;
+}
+.VPFeature .details { color: #64748B !important; }
+.VPFeature .icon { background: rgba(249, 115, 22, 0.08) !important; }
+
+/* ── Search box ── */
+.VPLocalSearchBox { background: #0A0E1A !important; border: 1px solid #1A2235 !important; }
+.VPLocalSearchBox .search-input { background: #07090F !important; color: #F1F5F9 !important; }
+
+/* ── 404 ── */
+.NotFound .code { color: #F97316 !important; }
+.NotFound h1 { font-family: 'Syne', system-ui, sans-serif !important; }

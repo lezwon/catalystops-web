@@ -205,48 +205,106 @@
     }
     .ide-tab.active { background: #0C1120; color: var(--text); border-bottom: 1.5px solid var(--accent); }
 
-    .ide-body {
-      display: grid; grid-template-columns: 36px 1fr 260px;
-      flex: 1; overflow: hidden;
-      font-family: var(--font-mono); font-size: 0.72rem; line-height: 1.8;
+    /* Split IDE body: code | claude chat */
+    .ide-split {
+      display: flex; flex: 1; overflow: hidden; min-height: 0;
     }
-
+    .ide-code-half {
+      flex: 0 0 58%; display: flex; overflow: hidden;
+      border-right: 1px solid var(--border);
+      font-family: var(--font-mono); font-size: 1rem; line-height: 1.9;
+    }
     .ide-gutter {
-      background: #0A0E1A; padding: 16px 10px 16px 0;
+      background: #0A0E1A; padding: 14px 8px 14px 0;
       text-align: right; color: #2A3A52; border-right: 1px solid var(--border);
-      user-select: none; overflow: hidden;
+      user-select: none; overflow: hidden; flex-shrink: 0; min-width: 36px;
+      font-size: 1rem;
     }
-
+    .ide-gutter span { display: block; }
     .ide-code-area {
-      background: #0C1120; padding: 16px 20px; overflow: hidden;
+      background: #0C1120; padding: 14px 20px; overflow: hidden; flex: 1;
+    }
+    .cl { display: block; white-space: pre; }
+
+    /* Claude chat half */
+    .ide-chat-half {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+      background: #080E1A;
+      font-family: var(--font-body); font-size: 0.75rem;
+    }
+    .chat-half-header {
+      height: 36px; background: #050A14; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 12px; gap: 6px;
+      font-size: 0.85rem; color: var(--text-muted); flex-shrink: 0;
+    }
+    .chat-half-online {
+      width: 5px; height: 5px; border-radius: 50%; background: var(--green);
+    }
+    .chat-half-msgs {
+      flex: 1; overflow-y: auto; padding: 10px; display: flex;
+      flex-direction: column; gap: 6px; scrollbar-width: none;
+    }
+    .chat-half-msgs::-webkit-scrollbar { display: none; }
+    .chat-half-input {
+      height: 42px; border-top: 1px solid var(--border); background: #050A14;
+      padding: 0 12px; display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .chat-input-text {
+      font-size: 1rem; color: var(--text); flex: 1;
+      white-space: nowrap; overflow: hidden;
+    }
+    .chat-input-cursor {
+      width: 1px; height: 0.8em; background: var(--accent);
+      animation: blink 1s step-end infinite; flex-shrink: 0;
     }
 
-    .ide-problems {
-      background: #0A0E1A; border-left: 1px solid var(--border);
-      padding: 16px 14px; overflow: hidden;
+    /* Chat message types */
+    .cm-user {
+      align-self: flex-end; background: rgba(249,115,22,0.07);
+      border: 1px solid rgba(249,115,22,0.15); border-radius: 8px 8px 2px 8px;
+      padding: 9px 13px; font-size: 1rem; color: var(--text); max-width: 92%;
     }
-    .ide-problems-header {
-      font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--text-muted); margin-bottom: 14px;
-      display: flex; align-items: center; justify-content: space-between;
+    .cm-tool {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 1rem; color: var(--text-muted); padding: 5px 2px;
     }
-    .ide-problems-count {
-      background: rgba(249,115,22,0.15); color: var(--accent);
-      padding: 2px 7px; border-radius: 2px; font-size: 0.6rem;
+    .cm-spinner {
+      width: 9px; height: 9px; border: 1.5px solid rgba(249,115,22,0.25);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin 0.7s linear infinite; flex-shrink: 0;
     }
+    .cm-done {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--green); flex-shrink: 0;
+    }
+    .cm-claude {
+      background: #0C1829; border: 1px solid var(--border);
+      border-radius: 2px 8px 8px 8px; padding: 9px 11px;
+      font-size: 1rem; color: var(--text-muted); line-height: 1.75; max-width: 100%;
+    }
+    .cm-plan-row {
+      padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 0.95rem; line-height: 1.6;
+    }
+    .cm-plan-row:last-child { border-bottom: none; }
+    .cm-appear { animation: fadeUp 0.2s ease forwards; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    .problem-item {
-      padding: 9px 10px; border-radius: 3px; margin-bottom: 6px;
-      border-left: 2px solid;
+    /* Status bar */
+    .ide-statusbar {
+      height: 20px; background: #030509; border-top: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 10px; gap: 14px;
+      font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-muted);
+      flex-shrink: 0;
     }
-    .problem-item.err { background: rgba(248,113,113,0.05); border-color: var(--red-tok); }
-    .problem-item.warn { background: rgba(251,191,36,0.05); border-color: var(--yellow-tok); }
-    .problem-item.info { background: rgba(34,211,238,0.05); border-color: var(--cyan); }
+    .s-err { color: var(--red-tok); display:flex;align-items:center;gap:3px; }
+    .s-warn { color: var(--yellow-tok); display:flex;align-items:center;gap:3px; }
+    .s-ok { color: var(--green); display:flex;align-items:center;gap:3px; }
 
-    .prob-rule { font-size: 0.58rem; color: var(--text-muted); margin-bottom: 2px; }
-    .prob-msg { font-size: 0.65rem; color: var(--text); line-height: 1.45; }
-    .prob-fix { font-size: 0.6rem; color: var(--green); margin-top: 5px; }
-    .prob-line { font-size: 0.58rem; color: var(--text-muted); margin-top: 3px; }
+    /* Line-fixed flash */
+    @keyframes lineFlash { 0%{background:rgba(74,222,128,0.18)} 100%{background:rgba(74,222,128,0.03)} }
+    .line-updated { animation: lineFlash 1.4s ease forwards; }
 
     /* Code token colors */
     .kw  { color: #C792EA; }
@@ -359,7 +417,7 @@
     /* Mini rule list in bento */
     .rule-list { list-style: none; margin-top: 16px; display: flex; flex-direction: column; gap: 6px; }
     .rule-list li {
-      font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);
+      font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted);
       display: flex; align-items: center; gap: 8px;
     }
     .rule-list li::before { content: ''; display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
@@ -427,7 +485,7 @@
     }
     .chat-top {
       background: var(--card); padding: 11px 16px; border-bottom: 1px solid var(--border);
-      font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);
+      font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted);
       display: flex; align-items: center; gap: 8px;
     }
     .chat-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
@@ -437,20 +495,20 @@
     .msg-user {
       align-self: flex-end; background: rgba(249,115,22,0.08);
       border: 1px solid rgba(249,115,22,0.18); border-radius: 8px 8px 2px 8px;
-      padding: 10px 14px; font-size: 0.8rem; max-width: 86%; color: var(--text);
+      padding: 10px 14px; font-size: 0.9rem; max-width: 86%; color: var(--text);
     }
     .msg-bot { align-self: flex-start; max-width: 92%; }
     .msg-bot-from {
-      font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-muted); margin-bottom: 5px;
+      font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); margin-bottom: 5px;
     }
     .msg-bot-tool {
-      font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-muted);
+      font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);
       margin-bottom: 6px; font-style: italic;
     }
     .msg-bot-bubble {
       background: var(--card); border: 1px solid var(--border);
       border-radius: 2px 8px 8px 8px; padding: 11px 14px;
-      font-size: 0.78rem; color: var(--text-muted); line-height: 1.7;
+      font-size: 0.9rem; color: var(--text-muted); line-height: 1.7;
     }
     .msg-bot-bubble .c-r { color: #F87171; }
     .msg-bot-bubble .c-y { color: #FBBF24; }
@@ -586,78 +644,77 @@
     </div>
   </div>
 
-  <!-- IDE mockup panel -->
+  <!-- Live IDE demo panel -->
   <div class="hero-ide">
     <div class="ide-bar">
       <div class="ide-dot" style="background:#FF5F57"></div>
       <div class="ide-dot" style="background:#FFBD2E"></div>
       <div class="ide-dot" style="background:#28C840"></div>
+      <span style="margin-left:10px;font-family:var(--font-mono);font-size:0.58rem;color:var(--text-muted)">pipeline.py</span>
     </div>
     <div class="ide-tabs">
       <div class="ide-tab active">pipeline.py</div>
+      <div class="ide-tab" id="claude-tab">⚡ CLAUDE</div>
       <div class="ide-tab">etl_jobs.py</div>
-      <div class="ide-tab">config.py</div>
     </div>
-    <div class="ide-body">
-      <!-- Line numbers -->
-      <div class="ide-gutter">
-        <span>1</span><br><span>2</span><br><span>3</span><br><span>4</span><br>
-        <span>5</span><br><span>6</span><br><span>7</span><br><span>8</span><br>
-        <span>9</span><br><span>10</span><br><span>11</span><br><span>12</span><br>
-        <span>13</span><br><span>14</span><br><span>15</span><br><span>16</span><br>
-        <span>17</span><br><span>18</span><br><span>19</span><br><span>20</span>
-      </div>
-      <!-- Code -->
-      <div class="ide-code-area">
-        <div><span class="kw">from</span> <span class="fn">pyspark.sql</span> <span class="kw">import</span> <span class="var">SparkSession</span><span class="punc">,</span> <span class="var">functions</span> <span class="kw">as</span> <span class="var">F</span></div>
-        <div><span class="kw">from</span> <span class="fn">pyspark.sql.types</span> <span class="kw">import</span> <span class="var">StructType</span></div>
-        <div>&nbsp;</div>
-        <div><span class="var">spark</span> <span class="punc">=</span> <span class="cls">SparkSession</span><span class="punc">.</span><span class="method">builder</span><span class="punc">.</span><span class="method">getOrCreate</span><span class="punc">()</span></div>
-        <div>&nbsp;</div>
-        <div><span class="cmt"># Load events from S3 partition</span></div>
-        <div><span class="var">events</span> <span class="punc">=</span> <span class="var">spark</span><span class="punc">.</span><span class="method">read</span><span class="punc">.</span><span class="method">parquet</span><span class="punc">(</span><span class="str">"s3://bucket/events/"</span><span class="punc">)</span></div>
-        <div>&nbsp;</div>
-        <div><span class="cmt"># Aggregate by date — full shuffle</span></div>
-        <div><span class="var">daily</span> <span class="punc">=</span> <span class="var">events</span><span class="punc">.</span><span class="method">groupBy</span><span class="punc">(</span><span class="str">"date"</span><span class="punc">).</span><span class="method">agg</span><span class="punc">(</span><span class="fn">F</span><span class="punc">.</span><span class="err-tok">count</span><span class="punc">(</span><span class="str">"*"</span><span class="punc">)</span><span class="punc">.</span><span class="method">alias</span><span class="punc">(</span><span class="str">"cnt"</span><span class="punc">))</span></div>
-        <div>&nbsp;</div>
-        <div><span class="cmt"># OOM risk: pulls all rows to driver</span></div>
-        <div><span class="var">rows</span> <span class="punc">=</span> <span class="var">events</span><span class="punc">.</span><span class="warn-tok">collect</span><span class="punc">()</span><span class="cursor"></span></div>
-        <div>&nbsp;</div>
-        <div><span class="cmt"># Join small lookup table</span></div>
-        <div><span class="var">result</span> <span class="punc">=</span> <span class="var">daily</span><span class="punc">.</span><span class="method">join</span><span class="punc">(</span><span class="fn">F</span><span class="punc">.</span><span class="method">broadcast</span><span class="punc">(</span><span class="var">lookup</span><span class="punc">),</span> <span class="str">"date"</span><span class="punc">)</span></div>
-        <div>&nbsp;</div>
-        <div><span class="cmt"># Global sort — single partition bottleneck</span></div>
-        <div><span class="var">sorted_df</span> <span class="punc">=</span> <span class="var">result</span><span class="punc">.</span><span class="err-tok">orderBy</span><span class="punc">(</span><span class="str">"date"</span><span class="punc">)</span></div>
-        <div>&nbsp;</div>
-        <div><span class="var">sorted_df</span><span class="punc">.</span><span class="method">write</span><span class="punc">.</span><span class="method">mode</span><span class="punc">(</span><span class="str">"overwrite"</span><span class="punc">).</span><span class="method">parquet</span><span class="punc">(</span><span class="str">"s3://out/"</span><span class="punc">)</span></div>
-      </div>
-      <!-- Problems panel -->
-      <div class="ide-problems">
-        <div class="ide-problems-header">
-          Problems
-          <span class="ide-problems-count">3</span>
-        </div>
 
-        <div class="problem-item err">
-          <div class="prob-rule">CODE_ORDER_001 · Error</div>
-          <div class="prob-msg">orderBy() shuffles all data to a single partition — severe bottleneck at scale.</div>
-          <div class="prob-fix">→ Use sortWithinPartitions()</div>
-          <div class="prob-line">line 18</div>
+    <div class="ide-split">
+      <!-- Code editor side -->
+      <div class="ide-code-half">
+        <div class="ide-gutter">
+          <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+          <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+          <span>11</span><span>12</span><span>13</span><span>14</span><span>15</span>
+          <span>16</span><span>17</span><span>18</span>
         </div>
-
-        <div class="problem-item warn">
-          <div class="prob-rule">CODE_COLLECT_001 · Warning</div>
-          <div class="prob-msg">collect() pulls entire dataset to the driver. OOM risk on large DataFrames.</div>
-          <div class="prob-fix">→ Use take(n) or write to storage</div>
-          <div class="prob-line">line 12</div>
-        </div>
-
-        <div class="problem-item info">
-          <div class="prob-rule">CODE_COUNT_001 · Info</div>
-          <div class="prob-msg">count("*") triggers a full Spark job. Consider approximateCountDistinct() for estimates.</div>
-          <div class="prob-line">line 10</div>
+        <div class="ide-code-area">
+          <div class="cl"><span class="kw">from</span> <span class="fn">pyspark.sql</span> <span class="kw">import</span> <span class="var">SparkSession</span><span class="punc">,</span> <span class="var">functions</span> <span class="kw">as</span> <span class="var">F</span></div>
+          <div class="cl"><span class="kw">from</span> <span class="fn">pyspark.sql.types</span> <span class="kw">import</span> <span class="var">StructType</span></div>
+          <div class="cl"> </div>
+          <div class="cl"><span class="var">spark</span> <span class="punc">=</span> <span class="cls">SparkSession</span><span class="punc">.</span><span class="method">builder</span><span class="punc">.</span><span class="method">getOrCreate</span><span class="punc">()</span></div>
+          <div class="cl"> </div>
+          <div class="cl"><span class="cmt"># Load tables from S3</span></div>
+          <div class="cl"><span class="var">events</span> <span class="punc">=</span> <span class="var">spark</span><span class="punc">.</span><span class="method">read</span><span class="punc">.</span><span class="method">parquet</span><span class="punc">(</span><span class="str">"s3://prod/events/"</span><span class="punc">)</span></div>
+          <div class="cl"><span class="var">lookup</span> <span class="punc">=</span> <span class="var">spark</span><span class="punc">.</span><span class="method">read</span><span class="punc">.</span><span class="method">parquet</span><span class="punc">(</span><span class="str">"s3://prod/lookup/"</span><span class="punc">)</span></div>
+          <!-- Line 9: dynamically typed by JS -->
+          <div class="cl" id="cl-9"><span style="color:var(--accent);animation:blink 1s step-end infinite">▌</span></div>
+          <div class="cl"><span class="var">daily</span> <span class="punc">=</span> <span class="var">events</span><span class="punc">.</span><span class="method">groupBy</span><span class="punc">(</span><span class="str">"date"</span><span class="punc">)</span><span class="punc">.</span><span class="method">agg</span><span class="punc">(</span><span class="fn">F</span><span class="punc">.</span><span class="method">count</span><span class="punc">(</span><span class="str">"*"</span><span class="punc">))</span></div>
+          <div class="cl"> </div>
+          <!-- Line 12: join — changes during fix -->
+          <div class="cl" id="cl-12"><span class="var">result</span> <span class="punc">=</span> <span class="var">daily</span><span class="punc">.</span><span class="method">join</span><span class="punc">(</span><span class="var">lookup</span><span class="punc">,</span> <span class="str">"date"</span><span class="punc">)</span></div>
+          <div class="cl"> </div>
+          <!-- Line 14: sort — changes during fix -->
+          <div class="cl" id="cl-14"><span class="var">sorted_df</span> <span class="punc">=</span> <span class="var">result</span><span class="punc">.</span><span class="err-tok">orderBy</span><span class="punc">(</span><span class="str">"date"</span><span class="punc">)</span></div>
+          <div class="cl"> </div>
+          <div class="cl"><span class="var">sorted_df</span><span class="punc">.</span><span class="method">write</span><span class="punc">.</span><span class="method">mode</span><span class="punc">(</span><span class="str">"overwrite"</span><span class="punc">)</span><span class="punc">.</span><span class="method">parquet</span><span class="punc">(</span><span class="str">"s3://out/"</span><span class="punc">)</span></div>
+          <div class="cl"> </div>
+          <div class="cl"> </div>
         </div>
       </div>
+
+      <!-- Claude AI chat side -->
+      <div class="ide-chat-half">
+        <div class="chat-half-header">
+          <span class="chat-half-online"></span>
+          CLAUDE · CatalystOps MCP
+        </div>
+        <div class="chat-half-msgs" id="chat-msgs"></div>
+        <div class="chat-half-input">
+          <svg width="11" height="11" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" stroke-width="2" style="flex-shrink:0">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+          <span class="chat-input-text" id="chat-input-text"><em style="color:var(--text-muted)">ask Claude anything…</em></span>
+          <span class="chat-input-cursor" id="chat-cursor" style="display:none"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="ide-statusbar">
+      <span id="s-err" class="s-err">✕ <span id="s-err-n">1</span></span>
+      <span id="s-warn" class="s-warn">⚠ <span id="s-warn-n">2</span></span>
+      <span style="margin-left:auto">Python 3.11</span>
+      <span>Databricks</span>
     </div>
   </div>
 
@@ -939,6 +996,243 @@
     </nav>
   </div>
 </footer>
+
+<script>
+(function () {
+  const kw = s => `<span class="kw">${s}</span>`;
+  const fn = s => `<span class="fn">${s}</span>`;
+  const v  = s => `<span class="var">${s}</span>`;
+  const m  = s => `<span class="method">${s}</span>`;
+  const st = s => `<span class="str">${s}</span>`;
+  const p  = s => `<span class="punc">${s}</span>`;
+  const er = s => `<span class="err-tok">${s}</span>`;
+  const ok = s => `<span class="method">${s}</span>`;
+  const nu = s => `<span class="cls">${s}</span>`;
+
+  const LINE9_A  = v('all_data')+p(' = ')+v('events')+p('.')+er('collect')+p('()');
+  const LINE9_B  = v('all_data')+p(' = ')+v('events')+p('.')+ok('take')+p('(')+nu('1000')+p(')');
+  const LINE12_A = v('result')+p(' = ')+v('daily')+p('.')+m('join')+p('(')+v('lookup')+p(', ')+st('"date"')+p(')');
+  const LINE12_B = v('result')+p(' = ')+v('daily')+p('.')+m('join')+p('(')+fn('F')+p('.')+m('broadcast')+p('(')+v('lookup')+p(')')+p(', ')+st('"date"')+p(')');
+  const LINE14_A = v('sorted_df')+p(' = ')+v('result')+p('.')+er('orderBy')+p('(')+st('"date"')+p(')');
+  const LINE14_B = v('sorted_df')+p(' = ')+v('result')+p('.')+ok('sortWithinPartitions')+p('(')+st('"date"')+p(')');
+
+  const $  = id => document.getElementById(id);
+  const cl9 = $('cl-9'), cl12 = $('cl-12'), cl14 = $('cl-14');
+  const msgs = $('chat-msgs'), inputEl = $('chat-input-text'), cursorEl = $('chat-cursor');
+  const claudeTab = $('claude-tab');
+
+  let timers = [];
+  function at(ms, fn) { timers.push(setTimeout(fn, ms)); }
+
+  function esc(t) {
+    return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function typeInto(el, plainText, finalHtml) {
+    let i = 0;
+    el.innerHTML = '';
+    const CURSOR = '<span class="cursor"></span>';
+    function step() {
+      if (i <= plainText.length) {
+        el.innerHTML = esc(plainText.slice(0, i)) + CURSOR;
+        i++;
+        timers.push(setTimeout(step, 36 + Math.random() * 22));
+      } else {
+        el.innerHTML = finalHtml;
+      }
+    }
+    step();
+  }
+
+  function typeInput(text, onDone) {
+    cursorEl.style.display = 'inline-block';
+    inputEl.textContent = '';
+    let i = 0;
+    function step() {
+      if (i <= text.length) {
+        inputEl.textContent = text.slice(0, i);
+        i++;
+        timers.push(setTimeout(step, 40 + Math.random() * 26));
+      } else { if (onDone) onDone(); }
+    }
+    step();
+  }
+
+  function appendMsg(html) {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = html;
+    const el = wrap.firstElementChild;
+    el.classList.add('cm-appear');
+    msgs.appendChild(el);
+    msgs.scrollTop = msgs.scrollHeight;
+    return el;
+  }
+  const userMsg   = text => appendMsg(`<div class="cm-user">${esc(text)}</div>`);
+  const toolMsg   = (name, args) => appendMsg(`<div class="cm-tool"><span class="cm-spinner" id="sp-${name}">◌</span><span style="font-family:var(--font-mono);font-size:0.9rem;color:var(--cyan)">${name}</span><span style="color:var(--text-muted);font-size:0.88rem;font-family:var(--font-mono)"> ${esc(args)}</span></div>`);
+  const claudeMsg = html => appendMsg(`<div class="cm-claude">${html}</div>`);
+
+  function markDone(name) {
+    const sp = document.getElementById('sp-' + name);
+    if (!sp) return;
+    sp.classList.remove('cm-spinner');
+    sp.classList.add('cm-done');
+    sp.textContent = '✓';
+  }
+
+  function applyFix(el, html) {
+    el.classList.remove('line-updated');
+    el.innerHTML = html;
+    void el.offsetWidth;
+    el.classList.add('line-updated');
+  }
+
+  function resetStatus() {
+    const errEl = $('s-err'), warnEl = $('s-warn');
+    if (errEl)  { errEl.className = 's-err';  errEl.innerHTML  = '✕ <span id="s-err-n">1</span>'; }
+    if (warnEl) { warnEl.className = 's-warn'; warnEl.innerHTML = '⚠ <span id="s-warn-n">2</span>'; }
+  }
+
+  function reset() {
+    timers.forEach(clearTimeout); timers = [];
+    msgs.innerHTML = '';
+    inputEl.innerHTML = '<em style="color:var(--text-muted)">ask Claude anything…</em>';
+    cursorEl.style.display = 'none';
+    claudeTab.style.borderBottom = ''; claudeTab.style.color = '';
+    cl9.innerHTML  = '<span style="color:var(--accent);animation:blink 1s step-end infinite">▌</span>';
+    cl12.innerHTML = LINE12_A;
+    cl14.innerHTML = LINE14_A;
+    cl9.classList.remove('line-updated');
+    cl12.classList.remove('line-updated');
+    cl14.classList.remove('line-updated');
+    resetStatus();
+  }
+
+  function planBlock(lines) {
+    return '<pre style="font-family:var(--font-mono);font-size:0.88rem;line-height:1.7;color:var(--text-muted);background:rgba(0,0,0,0.35);border:1px solid var(--border);border-radius:4px;padding:9px 12px;margin:6px 0 2px;overflow:hidden;white-space:pre">' + lines + '</pre>';
+  }
+
+  function run() {
+    reset();
+
+    // Phase 1 — type the collect() anti-pattern into line 9
+    at(800, () => typeInto(cl9, 'all_data = events.collect()', LINE9_A));
+
+    // Phase 2 — error indicator ticks up
+    at(3600, () => {
+      const en = $('s-err-n'), wn = $('s-warn-n');
+      if (en) en.textContent = '3';
+      if (wn) wn.textContent = '1';
+    });
+
+    // Phase 3 — user activates Claude tab
+    at(4800, () => {
+      claudeTab.style.borderBottom = '2px solid var(--accent)';
+      claudeTab.style.color = 'var(--accent)';
+    });
+
+    // Phase 4 — type request referencing last job run
+    at(5400, () => typeInput('optimize pipeline.py using last Databricks job run'));
+
+    // Phase 5 — submit request
+    at(9000, () => {
+      const txt = inputEl.textContent;
+      inputEl.innerHTML = '<em style="color:var(--text-muted)">ask Claude anything…</em>';
+      cursorEl.style.display = 'none';
+      userMsg(txt);
+    });
+
+    // Phase 6 — fetch execution plan from Databricks
+    at(9800, () => toolMsg('get_job_run_plan', '(job_id="etl_daily_20240423", cluster="prod-analytics")'));
+
+    // Phase 7 — plan arrives, show physical plan
+    at(12200, () => {
+      markDone('get_job_run_plan');
+      claudeMsg(
+        '<span style="color:var(--text-muted);font-size:0.62rem">Job run #20240423 · runtime 4m 12s · 8 nodes</span>' +
+        planBlock(
+          '<span style="color:var(--cyan)">== Physical Plan ==</span>\n' +
+          'CollectLimit 2147483647\n' +
+          '<span style="color:var(--red-tok)">+- LocalTableScan [all_data]         ← collect() driver pull</span>\n' +
+          '<span style="color:var(--yellow-tok)">SortMergeJoin Inner, [date], [date]  ← no broadcast hint</span>\n' +
+          ':- Sort [date ASC], true\n' +
+          ':  +- Exchange hashpartitioning(date, 200)\n' +
+          ':     +- Scan parquet prod.events\n' +
+          '+- Sort [date ASC], true\n' +
+          '   +- Exchange hashpartitioning(date, 200)\n' +
+          '<span style="color:var(--red-tok)">Exchange SinglePartition              ← orderBy global sort</span>\n' +
+          '   +- Scan parquet prod.lookup'
+        )
+      );
+    });
+
+    // Phase 8 — cross-reference plan against source code
+    at(13600, () => toolMsg('analyze_pyspark', '(file="pipeline.py", plan_id="20240423")'));
+
+    // Phase 9 — analysis complete, findings tied to plan nodes
+    at(15400, () => {
+      markDone('analyze_pyspark');
+      claudeMsg(
+        'Plan analysis found <strong style="color:#fff">3 optimizations</strong>:<br/><br/>' +
+        '<div class="cm-plan-row"><span style="color:var(--red-tok)">● ERR</span>&nbsp;<strong>Line 9</strong> — <code style="font-family:var(--font-mono);font-size:0.62em;color:var(--red-tok)">collect()</code> → <span style="color:var(--text-muted)">CollectLimit node pulled 2.1 GB to driver</span></div>' +
+        '<div class="cm-plan-row"><span style="color:var(--red-tok)">● ERR</span>&nbsp;<strong>Line 14</strong> — <code style="font-family:var(--font-mono);font-size:0.62em;color:var(--red-tok)">orderBy()</code> → <span style="color:var(--text-muted)">Exchange SinglePartition bottleneck — 38s shuffle</span></div>' +
+        '<div class="cm-plan-row"><span style="color:var(--yellow-tok)">● WARN</span>&nbsp;<strong>Line 12</strong> — <span style="color:var(--text-muted)">SortMergeJoin on 18 MB table · broadcast threshold is 200 MB</span></div>'
+      );
+    });
+
+    // Phase 10 — offer specific fixes
+    at(17400, () => {
+      claudeMsg(
+        'Ready to apply:<br/>' +
+        '<div class="cm-plan-row" style="margin-top:5px"><span style="color:var(--cyan);font-family:var(--font-mono);font-size:0.62em">collect()</span> <span style="color:var(--text-muted)">→</span> <span style="color:var(--green);font-family:var(--font-mono);font-size:0.62em">take(1000)</span><span style="color:var(--text-muted);font-size:0.62em"> · prevents driver OOM</span></div>' +
+        '<div class="cm-plan-row"><span style="color:var(--cyan);font-family:var(--font-mono);font-size:0.62em">orderBy()</span> <span style="color:var(--text-muted)">→</span> <span style="color:var(--green);font-family:var(--font-mono);font-size:0.62em">sortWithinPartitions()</span><span style="color:var(--text-muted);font-size:0.62em"> · removes global shuffle</span></div>' +
+        '<div class="cm-plan-row"><span style="color:var(--cyan);font-family:var(--font-mono);font-size:0.62em">join(lookup)</span> <span style="color:var(--text-muted)">→</span> <span style="color:var(--green);font-family:var(--font-mono);font-size:0.62em">join(F.broadcast(lookup))</span><span style="color:var(--text-muted);font-size:0.62em"> · eliminates SortMergeJoin</span></div>'
+      );
+    });
+
+    // Phase 11 — type confirmation
+    at(19200, () => typeInput('yes apply all'));
+
+    // Phase 12 — submit
+    at(21600, () => {
+      inputEl.innerHTML = '<em style="color:var(--text-muted)">ask Claude anything…</em>';
+      cursorEl.style.display = 'none';
+      userMsg('yes apply all');
+    });
+
+    // Phase 13 — apply fixes to code (staggered)
+    at(22300, () => applyFix(cl9,  LINE9_B));
+    at(22650, () => applyFix(cl12, LINE12_B));
+    at(23000, () => applyFix(cl14, LINE14_B));
+
+    // Phase 14 — status bar goes green
+    at(23600, () => {
+      const errEl = $('s-err'), warnEl = $('s-warn');
+      if (errEl)  { errEl.className  = 's-ok';   errEl.innerHTML  = '✓ 3 fixed'; }
+      if (warnEl) { warnEl.className = 's-warn';  warnEl.innerHTML = '⚠ <span id="s-warn-n">0</span>'; }
+    });
+
+    // Phase 15 — Claude confirms with savings from real plan data
+    at(24200, () => {
+      claudeMsg(
+        '<span style="color:var(--green)">✓ Applied.</span> Based on job run #20240423:<br/>' +
+        '<div class="cm-plan-row">CollectLimit removed · <strong style="color:#fff">−2.1 GB driver memory</strong></div>' +
+        '<div class="cm-plan-row">SortMergeJoin → BroadcastHashJoin · <strong style="color:#fff">−Exchange stage (38s)</strong></div>' +
+        '<div class="cm-plan-row">SinglePartition → local sort · <strong style="color:#fff">est. 4m 12s → ~2m 05s</strong></div>'
+      );
+    });
+
+    // Loop
+    at(35000, run);
+  }
+
+  const ideEl = document.querySelector('.hero-ide');
+  if (!ideEl) { run(); return; }
+  const obs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) { obs.disconnect(); run(); }
+  }, { threshold: 0.2 });
+  obs.observe(ideEl);
+})();
+</script>
 
 </body>
 </html>

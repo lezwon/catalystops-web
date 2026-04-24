@@ -138,3 +138,56 @@ html, body { background: var(--bg); overflow-x: hidden; color: var(--text); }
 .prose th { background: var(--card); color: var(--accent); font-weight: 600; padding: 10px 14px; text-align: left; border: 1px solid var(--border); }
 .prose td { padding: 9px 14px; border: 1px solid var(--border); color: var(--text-muted); }
 .prose tr:nth-child(even) td { background: rgba(15,24,41,0.5); }
+
+/* ── Shared nav ── */
+nav.site-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: 58px; display: flex; align-items: center;
+  background: rgba(7,9,15,0.88); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner {
+  max-width: 1280px; margin: 0 auto; padding: 0 28px; width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-logo {
+  display: flex; align-items: center; gap: 10px; text-decoration: none;
+  color: var(--text); font-family: var(--font-display); font-weight: 700;
+  font-size: 1rem; letter-spacing: -0.01em;
+}
+.nav-logo img { width: 26px; height: 26px; }
+.nav-links { display: flex; align-items: center; gap: 28px; list-style: none; margin: 0; padding: 0; }
+.nav-links a {
+  color: var(--text-muted); text-decoration: none;
+  font-size: 0.8125rem; font-weight: 500; transition: color 0.15s;
+}
+.nav-links a:hover { color: var(--text); }
+.nav-cta {
+  font-family: var(--font-display); font-weight: 700; font-size: 0.75rem;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  background: var(--accent); color: #fff;
+  padding: 8px 18px; border-radius: 3px; text-decoration: none;
+  transition: background 0.15s, box-shadow 0.15s; white-space: nowrap;
+}
+.nav-cta:hover { background: var(--accent-dim); box-shadow: 0 0 18px rgba(249,115,22,0.3); }
+
+/* ── Shared footer ── */
+footer.site-footer {
+  border-top: 1px solid var(--border); padding: 28px;
+}
+.footer-inner {
+  max-width: 1280px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px;
+}
+.footer-brand {
+  display: flex; align-items: center; gap: 8px; text-decoration: none;
+  font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);
+}
+.footer-brand img { width: 18px; height: 18px; opacity: 0.4; }
+.footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+.footer-links a {
+  font-size: 0.78rem; color: var(--text-muted);
+  text-decoration: none; transition: color 0.15s;
+}
+.footer-links a:hover { color: var(--text); }
